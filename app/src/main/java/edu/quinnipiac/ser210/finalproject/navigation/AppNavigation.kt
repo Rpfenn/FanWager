@@ -1,6 +1,5 @@
 package edu.quinnipiac.ser210.finalproject.navigation
 
-
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -9,31 +8,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModel
-import edu.quinnipiac.ser210.finalproject.screens.DetailsScreen
 import edu.quinnipiac.ser210.finalproject.screens.HomeScreen
+
+object Routes {
+    const val HOME = "home"
+    // Add more routes here like:
+    // const val PLACE_BET = "place_bet"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,37 +39,32 @@ fun AppBar(
     var menuExpanded by remember { mutableStateOf(false) }
 
     TopAppBar(
-        title = { Text("McDonald's Menu") },
+        title = { Text("FanWager - MLB") },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.secondary
+            containerColor = MaterialTheme.colorScheme.primary
         ),
         modifier = modifier,
         navigationIcon = {
             if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back"
-                    )
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                 }
             }
         },
         actions = {
-            // Share button
             if (textToShare.isNotBlank()) {
                 IconButton(onClick = {
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
-                        putExtra(Intent.EXTRA_SUBJECT, "Share Item")
+                        putExtra(Intent.EXTRA_SUBJECT, "Check this out")
                         putExtra(Intent.EXTRA_TEXT, textToShare)
                     }
                     context.startActivity(Intent.createChooser(intent, "Share via"))
                 }) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                    Icon(Icons.Default.Share, contentDescription = "Share")
                 }
             }
 
-            // Overflow menu
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "More Options")
             }
@@ -97,7 +80,6 @@ fun AppBar(
                         onSettingsClick()
                     }
                 )
-
                 DropdownMenuItem(
                     text = { Text("Help") },
                     onClick = {
@@ -112,31 +94,17 @@ fun AppBar(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun MovieNavigation() {
+fun FanWagerNavigation() {
     val navController = rememberNavController()
-
-    val viewModel: McdViewModel = viewModel()
-    viewModel.getMenuItems()
-
 
     NavHost(
         navController = navController,
-        startDestination = AppScreens.HomeScreen.name,
+        startDestination = Routes.HOME,
         modifier = Modifier.fillMaxSize()
     ) {
-        composable(AppScreens.HomeScreen.name) {
-            HomeScreen(navController = navController, viewModel = viewModel)
+        composable(Routes.HOME) {
+            HomeScreen(navController = navController)
         }
-        composable(
-            route = AppScreens.DetailScreen.name + "/{name}",
-            arguments = listOf(navArgument("name") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val name = backStackEntry.arguments?.getString("name")
-            DetailsScreen(
-                navController = navController,
-                viewModel = viewModel,
-                itemName = name
-            )
-        }
+        // Add other screens here using composable(Routes.PLACE_BET) { ... }
     }
 }
