@@ -1,77 +1,72 @@
-package edu.quinnipiac.ser210.finalproject.model
+package edu.quinnipiac.ser210.finalproject
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import edu.quinnipiac.ser210.finalproject.api.ApiInterface
-import edu.quinnipiac.ser210.finalproject.ui.theme.ColorSchemeType
+import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
+import edu.quinnipiac.ser210.finalproject.model.GameDetails
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import okhttp3.*
+import com.google.gson.Gson
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
-class FanWagerViewModel : ViewModel(){
+class FanWagerViewModel : ViewModel() {
 
-    private val mcdApi = ApiInterface.create()
+    private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
+    val games: StateFlow<List<GameDetails>> = _games
 
-    private val _mcdItems = MutableLiveData<List<Game>>()
-    val mcdItems: LiveData<List<Game>> = _mcdItems
-    //d686fd815cmsh70abd06154772a8p11311cjsn0f323eb4688f
-    //a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c
-    private val apiKey = "d686fd815cmsh70abd06154772a8p11311cjsn0f323eb4688f"
-    private val host = "mcdonald-s-products-api.p.rapidapi.com"
+    private val client = OkHttpClient()
 
-    private val _themeType = MutableLiveData(ColorSchemeType.LIGHT)
-    val themeType: LiveData<ColorSchemeType> = _themeType
+    // Replace with your actual API key
+    private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
 
-    fun setThemeType(newType: ColorSchemeType) {
-        _themeType.value = newType
-    }
-    fun getMenuItems() {
-        viewModelScope.launch {
-            try {
-                val menuResponse = mcdApi.getCurrentMenu(apiKey, host)
+    // Base URL and endpoint
+    private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
+    private val endpoint = "/getMLBGamesForDate"
 
-                if (menuResponse.isSuccessful) {
-                    val categories = menuResponse.body()?.categories
+    fun fetchGames() {
+        val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+        val url = "$baseUrl$endpoint?gameDate=$today"
 
-                    val productIds = categories
-                        ?.flatMap { it.products }
-                        ?.distinct()
-                        ?.take(10)
-                        ?: emptyList()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("X-RapidAPI-Key", apiKey)
+            .addHeader("X-RapidAPI-Host", "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
+            .build()
 
-                    val detailedItems = mutableListOf<Game>()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("TankAPI", "❌ Network error: ${e.message}")
+            }
 
-                    for (id in productIds) {
-                        val itemResponse = mcdApi.getProductById(id, apiKey, host)
-                        if (itemResponse.isSuccessful) {
-                            itemResponse.body()?.let { item ->
-                                val calories = item.nutrient_facts
-                                    ?.firstOrNull { it.name?.contains("Calories", ignoreCase = true) == true }
-                                    ?.value?.toIntOrNull()
-
-                                val updatedItem = item.copy(
-                                    calories = calories
-                                    //apiImageUrl = "https://via.placeholder.com/400x200.png?text=McItem+$id"
-                                )
-
-                                detailedItems.add(updatedItem)
-                            }
-                        } else {
-                            Log.e("REAL_API_ITEM_FAIL", " Product $id failed with code ${itemResponse.code()}")
-                        }
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!it.isSuccessful) {
+                        Log.e("TankAPI", "❌ API Error (${it.code}): ${it.body?.string()}")
+                        return
                     }
 
-                    Log.d("REAL_API_RESULT", " Loaded ${detailedItems.size} real items")
-                    _mcdItems.value = detailedItems
+                    val responseBody = it.body?.string()
+                    if (responseBody != null) {
+                        // 🪵 Debug log for raw JSON
+                        Log.d("TankAPI", "🔍 RAW JSON:\n$responseBody")
 
-                } else {
-                    Log.e("REAL_API_FAIL", " Menu load failed: ${menuResponse.code()} - ${menuResponse.errorBody()?.string()}")
+                        try {
+                            val parsed = Gson().fromJson(responseBody, MLBGameResponse::class.java)
+                            val gameList = parsed.body
+                            _games.value = gameList
+                            Log.d("TankAPI", "✅ Loaded ${gameList.size} games.")
+                        } catch (ex: Exception) {
+                            Log.e("TankAPI", "❌ Exception while parsing JSON: ${ex.message}")
+                        }
+                    } else {
+                        Log.e("TankAPI", "❌ Empty response body")
+                    }
                 }
-
-            } catch (e: Exception) {
-                Log.e("REAL_API_EXCEPTION", " ${e.message}")
             }
-        }
+        })
     }
 }
