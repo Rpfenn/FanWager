@@ -54,6 +54,12 @@ dependencies {
 
     implementation(libs.logging.interceptor)
 
+    implementation(libs.runtime.livedata)
+
+    implementation(libs.material3)
+
+
+
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
