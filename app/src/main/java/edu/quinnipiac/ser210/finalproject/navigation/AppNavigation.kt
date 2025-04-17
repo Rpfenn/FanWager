@@ -20,8 +20,8 @@ import edu.quinnipiac.ser210.finalproject.screens.PlaceBetScreen
 
 object Routes {
     const val HOME = "home"
-    // Add more routes here like:
-    // const val PLACE_BET = "place_bet"
+    //Can add more routes here
+    //val PLACE_BET = "place_bet"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

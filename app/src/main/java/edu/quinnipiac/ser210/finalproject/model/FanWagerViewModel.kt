@@ -19,10 +19,10 @@ class FanWagerViewModel : ViewModel() {
 
     private val client = OkHttpClient()
 
-    // Replace with your actual API key
+    //Use Your Own Api Key
     private val apiKey = "9702a4a17amsh122c783445bb75ap122f3ajsna301a75ea9ef"
 
-    // Base URL and endpoint
+    //URL For Endpoint
     private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
     private val endpoint = "/getMLBGamesForDate"
 
@@ -39,31 +39,31 @@ class FanWagerViewModel : ViewModel() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e("TankAPI", "❌ Network error: ${e.message}")
+                Log.e("TankAPI", "Network error: ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     if (!it.isSuccessful) {
-                        Log.e("TankAPI", "❌ API Error (${it.code}): ${it.body?.string()}")
+                        Log.e("TankAPI", "API Error (${it.code}): ${it.body?.string()}")
                         return
                     }
 
                     val responseBody = it.body?.string()
                     if (responseBody != null) {
                         // 🪵 Debug log for raw JSON
-                        Log.d("TankAPI", "🔍 RAW JSON:\n$responseBody")
+                        Log.d("TankAPI", "RAW JSON:\n$responseBody")
 
                         try {
                             val parsed = Gson().fromJson(responseBody, MLBGameResponse::class.java)
                             val gameList = parsed.body
                             _games.value = gameList
-                            Log.d("TankAPI", "✅ Loaded ${gameList.size} games.")
+                            Log.d("TankAPI", "Loaded ${gameList.size} games.")
                         } catch (ex: Exception) {
-                            Log.e("TankAPI", "❌ Exception while parsing JSON: ${ex.message}")
+                            Log.e("TankAPI", "Exception while parsing JSON: ${ex.message}")
                         }
                     } else {
-                        Log.e("TankAPI", "❌ Empty response body")
+                        Log.e("TankAPI", "Empty response body")
                     }
                 }
             }
