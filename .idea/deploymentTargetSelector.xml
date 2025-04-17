@@ -12,6 +12,14 @@
           </Target>
         </DropdownSelection>
         <DialogSelection />
+        <DropdownSelection timestamp="2025-04-16T21:20:21.039559800Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\03hoc\.android\avd\Pixel_6_API_34_4.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
       </SelectionState>
     </selectionStates>
   </component>

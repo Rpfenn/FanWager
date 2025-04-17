@@ -58,7 +58,7 @@ dependencies {
 
     implementation(libs.material3)
 
-
+    implementation(libs.okhttp)
 
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation.compose)
