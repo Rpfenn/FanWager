@@ -23,7 +23,7 @@ fun HomeScreen(navController: NavController) {
     val viewModel: FanWagerViewModel = viewModel()
     val games by viewModel.games.collectAsState()
 
-    // Fetch games when screen loads
+    //Fetch games when screen loads
     LaunchedEffect(Unit) {
         viewModel.fetchGames()
     }
@@ -57,26 +57,29 @@ fun GameCard(game: GameDetails, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .clickable {onClick() },
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            val awayLogo = getLogoResId(game.away.lowercase())
-            val homeLogo = getLogoResId(game.home.lowercase())
+        val awayLogo = getLogoResId(game.away.lowercase())
+        val homeLogo = getLogoResId(game.home.lowercase())
 
-            // Away team logo
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Image(
                 painter = painterResource(id = awayLogo),
                 contentDescription = "${game.away} logo",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(48.dp)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = "${game.away} @ ${game.home}",
                     style = MaterialTheme.typography.titleMedium
@@ -87,13 +90,10 @@ fun GameCard(game: GameDetails, onClick: () -> Unit) {
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Home team logo
             Image(
                 painter = painterResource(id = homeLogo),
                 contentDescription = "${game.home} logo",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(48.dp)
             )
         }
     }

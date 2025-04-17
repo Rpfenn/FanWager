@@ -1,6 +1,7 @@
 package edu.quinnipiac.ser210.finalproject.screens
 
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -9,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,7 +29,6 @@ fun PlaceBetScreen(
     val games by viewModel.games.collectAsState()
     val game = games.find { "${it.home}_${it.away}" == gameId }
 
-    // Trigger API call if needed
     LaunchedEffect(Unit) {
         if (games.isEmpty()) {
             viewModel.fetchGames()
@@ -69,7 +71,11 @@ fun PlaceBetScreen(
             }
 
             else -> {
-                PlaceBetForm(game = game, navController = navController, modifier = Modifier.padding(padding))
+                PlaceBetForm(
+                    game = game,
+                    navController = navController,
+                    modifier = Modifier.padding(padding)
+                )
             }
         }
     }
@@ -84,16 +90,37 @@ fun PlaceBetForm(
     var selectedTeam by remember { mutableStateOf("") }
     var wagerAmount by remember { mutableStateOf("") }
 
+    val awayLogo = getLogoResId(game.away.lowercase())
+    val homeLogo = getLogoResId(game.home.lowercase())
+
     Column(
         modifier = modifier
             .padding(16.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "${game.away} @ ${game.home}",
-            style = MaterialTheme.typography.titleLarge
-        )
+        // 🏟 Centered logos and matchup
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Image(
+                painter = painterResource(id = awayLogo),
+                contentDescription = "${game.away} logo",
+                modifier = Modifier.size(60.dp)
+            )
+            Text(
+                text = "${game.away} @ ${game.home}",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Image(
+                painter = painterResource(id = homeLogo),
+                contentDescription = "${game.home} logo",
+                modifier = Modifier.size(60.dp)
+            )
+        }
+
         Text(
             text = "Game Time: ${game.gameTime}",
             style = MaterialTheme.typography.bodyMedium
@@ -132,5 +159,17 @@ fun PlaceBetForm(
             Text("Place Bet on $selectedTeam")
         }
     }
+
+    @Composable
+    fun getLogoResId(teamAbbreviation: String): Int {
+        val context = LocalContext.current
+        return context.resources.getIdentifier(
+            teamAbbreviation,
+            "drawable",
+            context.packageName
+        )
+    }
 }
+
+
 

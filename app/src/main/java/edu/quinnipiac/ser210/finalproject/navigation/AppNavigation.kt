@@ -25,8 +25,7 @@ import edu.quinnipiac.ser210.finalproject.screens.SettingsScreen
 
 object Routes {
     const val HOME = "home"
-    const val SETTINGS = "settings"
-    // Add more routes here like:
+    // Can add more routes here like:
     // const val PLACE_BET = "place_bet"
 }
 
@@ -128,4 +127,3 @@ fun FanWagerNavigation(navController: NavHostController) {
         }
     }
 }
-
