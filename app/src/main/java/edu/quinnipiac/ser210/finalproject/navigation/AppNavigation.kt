@@ -19,6 +19,7 @@ import edu.quinnipiac.ser210.finalproject.screens.HomeScreen
 
 object Routes {
     const val HOME = "home"
+    const val SETTINGS = "settings"
     // Add more routes here like:
     // const val PLACE_BET = "place_bet"
 }
@@ -102,6 +103,7 @@ fun FanWagerNavigation() {
         startDestination = Routes.HOME,
         modifier = Modifier.fillMaxSize()
     ) {
+
         composable(Routes.HOME) {
             HomeScreen(navController = navController)
         }
