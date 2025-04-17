@@ -10,7 +10,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun HistoryScreen() {
+fun SettingsScreen() {
     Box(
         modifier =
         Modifier.fillMaxSize(),
@@ -18,7 +18,7 @@ fun HistoryScreen() {
     ) {
 
         Text(
-            text = "History Screen",
+            text = "Setting Screen",
 
             fontFamily = FontFamily.Cursive,
             fontSize = 22.sp
