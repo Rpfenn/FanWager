@@ -151,7 +151,7 @@ class MainActivity : ComponentActivity() {
                 topBar = {
                     TopAppBar(
                         title = {
-                            Text(text = "Navigation Drawer")
+                            Text(text = "FanWager - MLB")
                         },
                         navigationIcon = {
                             IconButton(onClick = {
