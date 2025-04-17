@@ -38,21 +38,23 @@ fun HomeScreen(navController: NavController) {
                 .padding(8.dp)
         ) {
             items(games) { game ->
-                GameCard(game = game)
+                GameCard(game = game) {
+                    val gameId = "${game.home}_${game.away}"
+                    navController.navigate("place_bet/$gameId")
+                }
             }
         }
     }
 }
 
 @Composable
-fun GameCard(game: GameDetails) {
+fun GameCard(game: GameDetails, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .clickable {
-                // TODO: Navigate to PlaceBetScreen with game info
-            }
+            .clickable {onClick() },
+        elevation = CardDefaults.cardElevation()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(

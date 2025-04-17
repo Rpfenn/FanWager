@@ -20,7 +20,7 @@ class FanWagerViewModel : ViewModel() {
     private val client = OkHttpClient()
 
     // Replace with your actual API key
-    private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
+    private val apiKey = "9702a4a17amsh122c783445bb75ap122f3ajsna301a75ea9ef"
 
     // Base URL and endpoint
     private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
