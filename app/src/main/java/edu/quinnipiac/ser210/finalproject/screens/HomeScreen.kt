@@ -23,7 +23,7 @@ fun HomeScreen(navController: NavController) {
     val viewModel: FanWagerViewModel = viewModel()
     val games by viewModel.games.collectAsState()
 
-    // Fetch games when screen loads
+    //Fetch games when screen loads
     LaunchedEffect(Unit) {
         viewModel.fetchGames()
     }

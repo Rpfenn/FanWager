@@ -15,5 +15,5 @@ data class LineScore(
 )
 
 data class TeamScore(
-    val R: String // Number of runs
+    val R: String
 )
