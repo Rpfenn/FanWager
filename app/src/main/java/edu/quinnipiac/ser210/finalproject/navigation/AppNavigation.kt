@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import edu.quinnipiac.ser210.finalproject.screens.HomeScreen
+import edu.quinnipiac.ser210.finalproject.screens.PlaceBetScreen
 
 object Routes {
     const val HOME = "home"
@@ -105,6 +106,9 @@ fun FanWagerNavigation() {
         composable(Routes.HOME) {
             HomeScreen(navController = navController)
         }
-        // Add other screens here using composable(Routes.PLACE_BET) { ... }
+        composable("place_bet/{gameId}") { backStackEntry ->
+            val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
+            PlaceBetScreen(navController = navController, gameId = gameId)
+        }
     }
 }
