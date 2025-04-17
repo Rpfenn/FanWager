@@ -1,12 +1,16 @@
 package edu.quinnipiac.ser210.finalproject.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -56,15 +60,51 @@ fun GameCard(game: GameDetails, onClick: () -> Unit) {
             .clickable {onClick() },
         elevation = CardDefaults.cardElevation()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "${game.away} @ ${game.home}",
-                style = MaterialTheme.typography.titleMedium
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            val awayLogo = getLogoResId(game.away.lowercase())
+            val homeLogo = getLogoResId(game.home.lowercase())
+
+            // Away team logo
+            Image(
+                painter = painterResource(id = awayLogo),
+                contentDescription = "${game.away} logo",
+                modifier = Modifier.size(40.dp)
             )
-            Text(
-                text = "Game Time: ${game.gameTime}",
-                style = MaterialTheme.typography.bodySmall
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${game.away} @ ${game.home}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Game Time: ${game.gameTime}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Home team logo
+            Image(
+                painter = painterResource(id = homeLogo),
+                contentDescription = "${game.home} logo",
+                modifier = Modifier.size(40.dp)
             )
         }
     }
+}
+
+@Composable
+fun getLogoResId(teamAbbreviation: String): Int {
+    val context = LocalContext.current
+    return context.resources.getIdentifier(
+        teamAbbreviation,
+        "drawable",
+        context.packageName
+    )
 }
