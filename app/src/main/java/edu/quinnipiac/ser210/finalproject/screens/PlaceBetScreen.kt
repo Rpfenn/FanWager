@@ -27,8 +27,7 @@ fun PlaceBetScreen(
     viewModel: FanWagerViewModel = viewModel()
 ) {
     val games by viewModel.games.collectAsState()
-    val game = games.find { "${it.home}_${it.away}" == gameId }
-
+    val game = games.find { it.gameId == gameId }
     LaunchedEffect(Unit) {
         if (games.isEmpty()) {
             viewModel.fetchGames()

@@ -2,8 +2,8 @@ package edu.quinnipiac.ser210.finalproject
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
+import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.*
@@ -11,6 +11,7 @@ import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import edu.quinnipiac.ser210.finalproject.model.Game
 
 class FanWagerViewModel : ViewModel() {
 
@@ -19,10 +20,7 @@ class FanWagerViewModel : ViewModel() {
 
     private val client = OkHttpClient()
 
-    //Use Your Own Api Key
-    private val apiKey = "9702a4a17amsh122c783445bb75ap122f3ajsna301a75ea9ef"
-
-    //URL For Endpoint
+    private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
     private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
     private val endpoint = "/getMLBGamesForDate"
 
@@ -51,12 +49,34 @@ class FanWagerViewModel : ViewModel() {
 
                     val responseBody = it.body?.string()
                     if (responseBody != null) {
-                        // 🪵 Debug log for raw JSON
                         Log.d("TankAPI", "RAW JSON:\n$responseBody")
 
                         try {
                             val parsed = Gson().fromJson(responseBody, MLBGameResponse::class.java)
-                            val gameList = parsed.body
+                            val nowEpoch = System.currentTimeMillis() / 1000
+                            val gameList = parsed.body.map { game ->
+
+                                // Status inference based on time
+                                val inferredStatus = when {
+                                    game.gameStatus == "In Progress" -> "In Progress"
+                                    game.gameStatus == "Completed" -> "Completed"
+                                    game.gameTime_epoch.toDoubleOrNull()?.let { it <= nowEpoch } == true -> "In Progress"
+                                    else -> "Scheduled"
+                                }
+
+                                Log.d("GameDebug", "Inferring status for: ${game.away} @ ${game.home}")
+                                Log.d("GameDebug", "Raw status: ${game.gameStatus}, Raw time: ${game.gameTime}, Epoch: ${game.gameTime_epoch}, Now: $nowEpoch")
+                                Log.d("GameDebug", "Final status: $inferredStatus")
+
+                                GameDetails(
+                                    gameId = game.gameID,
+                                    away = game.away,
+                                    home = game.home,
+                                    gameTime = game.gameTime,
+                                    gameStatus = inferredStatus
+                                )
+                            }
+
                             _games.value = gameList
                             Log.d("TankAPI", "Loaded ${gameList.size} games.")
                         } catch (ex: Exception) {
