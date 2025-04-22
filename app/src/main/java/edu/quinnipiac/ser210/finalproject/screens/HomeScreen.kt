@@ -23,10 +23,13 @@ fun HomeScreen(navController: NavController) {
     val viewModel: FanWagerViewModel = viewModel()
     val games by viewModel.games.collectAsState()
 
-    //Fetch games when screen loads
     LaunchedEffect(Unit) {
         viewModel.fetchGames()
     }
+
+    val inProgressGames = games.filter { it.gameStatus == "In Progress" }
+    val scheduledGames = games.filter { it.gameStatus == "Scheduled" }
+    val completedGames = games.filter { it.gameStatus == "Completed" }
 
     Scaffold(
         topBar = {
@@ -41,14 +44,45 @@ fun HomeScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
-            items(games) { game ->
-                GameCard(game = game) {
-                    val gameId = "${game.home}_${game.away}"
-                    navController.navigate("place_bet/$gameId")
+            if (inProgressGames.isNotEmpty()) {
+                item { SectionHeader("In Progress") }
+                items(inProgressGames) { game ->
+                    GameCard(game = game) {
+                        navController.navigate("place_bet/${game.gameId}")
+                    }
+                }
+            }
+
+            if (scheduledGames.isNotEmpty()) {
+                item { SectionHeader("Scheduled") }
+                items(scheduledGames) { game ->
+                    GameCard(game = game) {
+                        navController.navigate("place_bet/${game.gameId}")
+                    }
+                }
+            }
+
+            if (completedGames.isNotEmpty()) {
+                item { SectionHeader("Completed") }
+                items(completedGames) { game ->
+                    GameCard(game = game) {
+                        navController.navigate("place_bet/${game.gameId}")
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+    )
 }
 
 @Composable
@@ -86,6 +120,10 @@ fun GameCard(game: GameDetails, onClick: () -> Unit) {
                 )
                 Text(
                     text = "Game Time: ${game.gameTime}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = "Status: ${game.gameStatus}",
                     style = MaterialTheme.typography.bodySmall
                 )
             }

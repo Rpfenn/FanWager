@@ -1,8 +1,9 @@
 package edu.quinnipiac.ser210.finalproject.model
 
 data class GameDetails(
-    val home: String,
+    val gameId: String,
     val away: String,
-    val gameTime: String
-    //Can add more fields when required
+    val home: String,
+    val gameTime: String,
+    val gameStatus: String // NEW: "Scheduled", "In Progress", "Completed", etc.
 )
