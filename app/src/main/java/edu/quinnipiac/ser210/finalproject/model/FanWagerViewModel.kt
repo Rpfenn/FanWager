@@ -8,12 +8,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.*
 import com.google.gson.Gson
+import edu.quinnipiac.ser210.finalproject.data.AppDatabase
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import edu.quinnipiac.ser210.finalproject.model.Game
+import android.content.Context
+import androidx.lifecycle.viewModelScope
+import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
+import edu.quinnipiac.ser210.finalproject.data.Prediction
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class FanWagerViewModel : ViewModel() {
+class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel() {
 
     private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
     val games: StateFlow<List<GameDetails>> = _games
@@ -27,6 +34,7 @@ class FanWagerViewModel : ViewModel() {
     fun fetchGames() {
         val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
         val url = "$baseUrl$endpoint?gameDate=$today"
+
 
         val request = Request.Builder()
             .url(url)
@@ -75,9 +83,15 @@ class FanWagerViewModel : ViewModel() {
                                     gameTime = game.gameTime,
                                     gameStatus = inferredStatus
                                 )
+
+
                             }
 
                             _games.value = gameList
+
+                            viewModelScope.launch(Dispatchers.IO) {
+                                repository.insertGames(gameList)
+                            }
                             Log.d("TankAPI", "Loaded ${gameList.size} games.")
                         } catch (ex: Exception) {
                             Log.e("TankAPI", "Exception while parsing JSON: ${ex.message}")
@@ -88,5 +102,11 @@ class FanWagerViewModel : ViewModel() {
                 }
             }
         })
+    }
+
+    fun placeBet(prediction: Prediction){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.insertPrediction(prediction)
+        }
     }
 }

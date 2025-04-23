@@ -15,13 +15,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
+import edu.quinnipiac.ser210.finalproject.data.AppDatabase
+import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModelFactory
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    val viewModel: FanWagerViewModel = viewModel()
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context) }
+    val viewModel: FanWagerViewModel = viewModel(
+        factory = FanWagerViewModelFactory(db)
+    )
     val games by viewModel.games.collectAsState()
+
 
     LaunchedEffect(Unit) {
         viewModel.fetchGames()

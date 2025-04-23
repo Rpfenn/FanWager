@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
+import edu.quinnipiac.ser210.finalproject.data.Prediction
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +74,8 @@ fun PlaceBetScreen(
                 PlaceBetForm(
                     game = game,
                     navController = navController,
-                    modifier = Modifier.padding(padding)
+                    modifier = Modifier.padding(padding),
+                    viewModel = viewModel
                 )
             }
         }
@@ -84,7 +86,8 @@ fun PlaceBetScreen(
 fun PlaceBetForm(
     game: GameDetails,
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: FanWagerViewModel
 ) {
     var selectedTeam by remember { mutableStateOf("") }
     var wagerAmount by remember { mutableStateOf("") }
@@ -149,8 +152,14 @@ fun PlaceBetForm(
 
         Button(
             onClick = {
-                // TODO: Save bet
-                navController.popBackStack()
+                //Unimplemented function to add prediction
+//                val prediction = Prediction(
+//                    userOwnerId = userId,
+//                    gameId = gameId.toIntOrNull() ?: 0,
+//                    predictedWinner = selectedTeam!!
+//                )
+//                viewModel.placeBet(prediction)
+                navController.popBackStack() // Go back to previous scree
             },
             enabled = selectedTeam.isNotEmpty() && wagerAmount.isNotEmpty(),
             modifier = Modifier.align(Alignment.CenterHorizontally)
