@@ -14,6 +14,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.LeaderboardEntry
 import edu.quinnipiac.ser210.finalproject.model.GameOdds
 import edu.quinnipiac.ser210.finalproject.network.RetrofitInstance.api
 import kotlinx.coroutines.launch
@@ -25,6 +26,9 @@ class FanWagerViewModel : ViewModel() {
 
     private val _odds = MutableStateFlow<List<GameOdds>>(emptyList())
     val odds: StateFlow<List<GameOdds>> = _odds
+
+    private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
+    val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard
 
     private val client = OkHttpClient()
 
@@ -66,17 +70,12 @@ class FanWagerViewModel : ViewModel() {
                             val nowEpoch = System.currentTimeMillis() / 1000
                             val gameList = parsed.body.map { game ->
 
-                                // Status inference based on time
                                 val inferredStatus = when {
                                     game.gameStatus == "In Progress" -> "In Progress"
                                     game.gameStatus == "Completed" -> "Completed"
                                     game.gameTime_epoch.toDoubleOrNull()?.let { it <= nowEpoch } == true -> "In Progress"
                                     else -> "Scheduled"
                                 }
-
-                                Log.d("GameDebug", "Inferring status for: ${game.away} @ ${game.home}")
-                                Log.d("GameDebug", "Raw status: ${game.gameStatus}, Raw time: ${game.gameTime}, Epoch: ${game.gameTime_epoch}, Now: $nowEpoch")
-                                Log.d("GameDebug", "Final status: $inferredStatus")
 
                                 GameDetails(
                                     gameId = game.gameID,
@@ -115,5 +114,17 @@ class FanWagerViewModel : ViewModel() {
                 Log.e("TankAPI", "🔥 Odds fetch failed", e)
             }
         }
+    }
+
+    fun loadFakeLeaderboard() {
+        val fakeLeaderboard = listOf(
+            LeaderboardEntry("Tannon", 5000),
+            LeaderboardEntry("Alex", 4200),
+            LeaderboardEntry("Jamie", 3900),
+            LeaderboardEntry("Riley", 3400),
+            LeaderboardEntry("Sam", 2800)
+        ).sortedByDescending { it.score }
+
+        _leaderboard.value = fakeLeaderboard
     }
 }
