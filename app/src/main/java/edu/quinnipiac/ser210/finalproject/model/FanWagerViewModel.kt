@@ -13,6 +13,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.LeaderboardEntry
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
@@ -25,6 +26,9 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
     val games: StateFlow<List<GameDetails>> = _games
 
+    private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
+    val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard
+
     private val client = OkHttpClient()
 
     private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
@@ -34,7 +38,6 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     fun fetchGames() {
         val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
         val url = "$baseUrl$endpoint?gameDate=$today"
-
 
         val request = Request.Builder()
             .url(url)
@@ -64,17 +67,12 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                             val nowEpoch = System.currentTimeMillis() / 1000
                             val gameList = parsed.body.map { game ->
 
-                                // Status inference based on time
                                 val inferredStatus = when {
                                     game.gameStatus == "In Progress" -> "In Progress"
                                     game.gameStatus == "Completed" -> "Completed"
                                     game.gameTime_epoch.toDoubleOrNull()?.let { it <= nowEpoch } == true -> "In Progress"
                                     else -> "Scheduled"
                                 }
-
-                                Log.d("GameDebug", "Inferring status for: ${game.away} @ ${game.home}")
-                                Log.d("GameDebug", "Raw status: ${game.gameStatus}, Raw time: ${game.gameTime}, Epoch: ${game.gameTime_epoch}, Now: $nowEpoch")
-                                Log.d("GameDebug", "Final status: $inferredStatus")
 
                                 GameDetails(
                                     gameId = game.gameID,
@@ -83,8 +81,6 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                                     gameTime = game.gameTime,
                                     gameStatus = inferredStatus
                                 )
-
-
                             }
 
                             _games.value = gameList
@@ -108,5 +104,17 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertPrediction(prediction)
         }
+    }
+
+    fun loadFakeLeaderboard() {
+        val fakeLeaderboard = listOf(
+            LeaderboardEntry("Tannon", 5000),
+            LeaderboardEntry("Alex", 4200),
+            LeaderboardEntry("Jamie", 3900),
+            LeaderboardEntry("Riley", 3400),
+            LeaderboardEntry("Sam", 2800)
+        ).sortedByDescending { it.score }
+
+        _leaderboard.value = fakeLeaderboard
     }
 }
