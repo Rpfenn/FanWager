@@ -2,23 +2,33 @@ package edu.quinnipiac.ser210.finalproject
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.*
 import com.google.gson.Gson
+import edu.quinnipiac.ser210.finalproject.api.ApiClient
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.GameOdds
+import edu.quinnipiac.ser210.finalproject.network.RetrofitInstance.api
+import kotlinx.coroutines.launch
 
 class FanWagerViewModel : ViewModel() {
 
     private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
     val games: StateFlow<List<GameDetails>> = _games
 
+    private val _odds = MutableStateFlow<List<GameOdds>>(emptyList())
+    val odds: StateFlow<List<GameOdds>> = _odds
+
     private val client = OkHttpClient()
+
+    private val api = ApiClient.retrofitService
 
     private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
     private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
@@ -88,5 +98,22 @@ class FanWagerViewModel : ViewModel() {
                 }
             }
         })
+    }
+
+    fun fetchOdds(gameDate: String) {
+        viewModelScope.launch {
+            try {
+                val response = api.getMLBBettingOdds(gameDate)
+                if (response.isSuccessful) {
+                    val gameOdds = response.body() ?: emptyList()
+                    _odds.value = gameOdds
+                    Log.d("TankAPI", "✅ Odds loaded: ${gameOdds.size} items")
+                } else {
+                    Log.e("TankAPI", "❌ Failed to load odds: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("TankAPI", "🔥 Odds fetch failed", e)
+            }
+        }
     }
 }
