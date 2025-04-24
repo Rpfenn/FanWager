@@ -222,7 +222,6 @@ fun PlaceBetForm(
 //                    predictedWinner = selectedTeam!!
 //                )
 //                viewModel.placeBet(prediction)
-                navController.popBackStack() // Go back to previous scree
                 betPlaced = true
                 Toast.makeText(
                     context,
