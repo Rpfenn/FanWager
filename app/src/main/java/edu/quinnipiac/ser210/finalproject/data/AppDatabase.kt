@@ -6,15 +6,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 
-
-@Database(entities = [GameDetails::class, Prediction::class, User::class], version = 1)
-abstract class AppDatabase : RoomDatabase(){
+@Database(
+    entities = [GameDetails::class, Prediction::class, User::class],
+    version = 2 // 🔼 Updated version to reflect schema changes
+)
+abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
     abstract fun userDao(): UserDao
     abstract fun predictionDao(): PredictionDao
 
     companion object {
-        @Volatile private var INSTANCE: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -22,9 +25,10 @@ abstract class AppDatabase : RoomDatabase(){
                     context.applicationContext,
                     AppDatabase::class.java,
                     "fanwager_db"
-                ).build().also { INSTANCE = it }
+                )
+                    .fallbackToDestructiveMigration() // Optional: clears DB if migration is missing
+                    .build().also { INSTANCE = it }
             }
         }
     }
-
 }
