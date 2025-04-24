@@ -30,6 +30,9 @@ import kotlinx.coroutines.launch
 
 class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel() {
 
+    private val _theme = MutableStateFlow(ColorSchemeType.LIGHT)
+    val theme: StateFlow<ColorSchemeType> = _theme
+
     private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
     val games: StateFlow<List<GameDetails>> = _games
 
@@ -163,5 +166,9 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         ).sortedByDescending { it.score }
 
         _leaderboard.value = fakeLeaderboard
+    }
+
+    fun setTheme(option: ColorSchemeType) {
+        _theme.value = option
     }
 }

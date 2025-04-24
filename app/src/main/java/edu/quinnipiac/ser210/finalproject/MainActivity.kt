@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -46,10 +47,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import edu.quinnipiac.ser210.finalproject.data.AppDatabase
+import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModelFactory
 import edu.quinnipiac.ser210.finalproject.ui.theme.Purple40
 import edu.quinnipiac.ser210.finalproject.navigation.FanWagerNavigation
 import edu.quinnipiac.ser210.finalproject.navigation.listOfNavItems
@@ -61,10 +66,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FinalProjectTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    SetupNavigation()
+            val context = LocalContext.current
+            val db = remember { AppDatabase.getDatabase(context) }
+            val viewModel: FanWagerViewModel = viewModel(factory = FanWagerViewModelFactory(db))
+            val theme by viewModel.theme.collectAsState()
 
+            FinalProjectTheme(colorSchemeType = theme) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    SetupNavigation(viewModel)
                 }
             }
         }
@@ -74,7 +83,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun SetupNavigation(){
+    private fun SetupNavigation(viewModel: FanWagerViewModel){
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         var selectedItemIndex by rememberSaveable {
             mutableIntStateOf(0)
@@ -171,7 +180,8 @@ class MainActivity : ComponentActivity() {
                 },
                 content = {
                     // Add NavHost here
-                    FanWagerNavigation(navController = navController)
+                    FanWagerNavigation(navController = navController,
+                        viewModel = viewModel)
                 }
 
                 )

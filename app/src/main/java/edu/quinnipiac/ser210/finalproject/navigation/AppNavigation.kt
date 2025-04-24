@@ -19,6 +19,7 @@ import edu.quinnipiac.ser210.finalproject.screens.HomeScreen
 import edu.quinnipiac.ser210.finalproject.screens.PlaceBetScreen
 import androidx.compose.material3.SnackbarHostState
 import androidx.navigation.NavHostController
+import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
 import edu.quinnipiac.ser210.finalproject.screens.HistoryScreen
 import edu.quinnipiac.ser210.finalproject.screens.LeaderBoardScreen
 import edu.quinnipiac.ser210.finalproject.screens.SettingsScreen
@@ -100,7 +101,9 @@ object Routes {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun FanWagerNavigation(navController: NavHostController) {
+fun FanWagerNavigation(navController: NavHostController,
+                       viewModel: FanWagerViewModel
+) {
 
     NavHost(
         navController = navController,
@@ -114,7 +117,7 @@ fun FanWagerNavigation(navController: NavHostController) {
                     Screens.HomeScreen -> HomeScreen(navController)
                     Screens.HistoryScreen -> HistoryScreen()
                     Screens.LeaderBoardScreen -> LeaderBoardScreen()
-                    Screens.SettingsScreen -> SettingsScreen()
+                    Screens.SettingsScreen -> SettingsScreen(viewModel = viewModel)
                 }
             }
         }
