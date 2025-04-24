@@ -24,6 +24,7 @@ import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.api.ApiClient
 import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
 import edu.quinnipiac.ser210.finalproject.data.Prediction
+import edu.quinnipiac.ser210.finalproject.ui.theme.ColorSchemeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -122,16 +123,24 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         viewModelScope.launch {
             try {
                 Log.d("TankAPI", "📡 Fetching betting odds for $gameDate ($gameId)")
-                Log.d("TankAPI", "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
-                val response = api.getBettingOdds(gameDate,
+                Log.d(
+                    "TankAPI",
+                    "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
+                )
+                val response = api.getBettingOdds(
+                    gameDate,
                     apiKey = apiKey,
-                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
+                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
+                )
                 if (response.isSuccessful) {
                     val allOdds = response.body()?.body ?: emptyList()
                     val matchingGame = allOdds.find { it.gameID == gameId }
                     if (matchingGame != null) {
                         _odds.value = matchingGame
-                        Log.d("TankAPI", "✅ Found odds for $gameId with ${matchingGame.sportsBooks.size} books")
+                        Log.d(
+                            "TankAPI",
+                            "✅ Found odds for $gameId with ${matchingGame.sportsBooks.size} books"
+                        )
                     } else {
                         Log.w("TankAPI", "⚠️ No odds found for $gameId")
                     }
@@ -143,7 +152,6 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
             }
         }
     }
-
 
     fun loadFakeLeaderboard() {
         val fakeLeaderboard = listOf(
