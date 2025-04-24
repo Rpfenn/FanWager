@@ -5,12 +5,13 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.GameDetails
 
 @Entity(
     tableName = "predictions",
     foreignKeys = [
         ForeignKey(entity = User::class, parentColumns = ["userId"], childColumns = ["userOwnerId"]),
-        ForeignKey(entity = Game::class, parentColumns = ["gameId"], childColumns = ["gameId"])
+        ForeignKey(entity = GameDetails::class, parentColumns = ["gameId"], childColumns = ["gameId"])
     ],
     indices = [Index("userOwnerId"), Index("gameId")]
 )

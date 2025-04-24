@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0"
+agp = "8.8.2"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -16,6 +16,7 @@ navigationCompose = "2.8.9"
 okhttp = "4.12.0"
 roomCommonJvm = "2.7.0"
 roomRuntimeAndroid = "2.7.0"
+
 
 
 [libraries]

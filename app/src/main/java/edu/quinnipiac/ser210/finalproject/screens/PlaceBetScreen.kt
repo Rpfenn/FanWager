@@ -17,16 +17,23 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
+import edu.quinnipiac.ser210.finalproject.data.AppDatabase
 import edu.quinnipiac.ser210.finalproject.data.Prediction
+import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModelFactory
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceBetScreen(
     navController: NavController,
-    gameId: String,
-    viewModel: FanWagerViewModel = viewModel()
+    gameId: String
+    //viewModel: FanWagerViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context) }
+    val viewModel: FanWagerViewModel = viewModel(
+        factory = FanWagerViewModelFactory(db)
+    )
     val games by viewModel.games.collectAsState()
     val game = games.find { it.gameId == gameId }
     LaunchedEffect(Unit) {
@@ -75,7 +82,6 @@ fun PlaceBetScreen(
                     game = game,
                     navController = navController,
                     modifier = Modifier.padding(padding),
-                    viewModel = viewModel
                 )
             }
         }
@@ -86,8 +92,7 @@ fun PlaceBetScreen(
 fun PlaceBetForm(
     game: GameDetails,
     navController: NavController,
-    modifier: Modifier = Modifier,
-    viewModel: FanWagerViewModel
+    modifier: Modifier = Modifier
 ) {
     var selectedTeam by remember { mutableStateOf("") }
     var wagerAmount by remember { mutableStateOf("") }
