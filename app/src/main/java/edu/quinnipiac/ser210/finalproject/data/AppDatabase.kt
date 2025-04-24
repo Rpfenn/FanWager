@@ -8,7 +8,7 @@ import edu.quinnipiac.ser210.finalproject.model.GameDetails
 
 @Database(
     entities = [GameDetails::class, Prediction::class, User::class],
-    version = 2 // 🔼 Updated version to reflect schema changes
+    version = 3 // 🔼 Updated version to reflect schema changes
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
