@@ -1,7 +1,11 @@
 package edu.quinnipiac.ser210.finalproject.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "games")
 data class GameDetails(
-    val gameId: String,
+    @PrimaryKey val gameId: String,
     val away: String,
     val home: String,
     val gameTime: String,
