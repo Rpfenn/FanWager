@@ -1,6 +1,7 @@
 package edu.quinnipiac.ser210.finalproject.screens
 
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +22,8 @@ import edu.quinnipiac.ser210.finalproject.data.AppDatabase
 import edu.quinnipiac.ser210.finalproject.data.Prediction
 import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModelFactory
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
+import edu.quinnipiac.ser210.finalproject.model.GameOdds
+import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,10 +38,18 @@ fun PlaceBetScreen(
         factory = FanWagerViewModelFactory(db)
     )
     val games by viewModel.games.collectAsState()
+    val odds by viewModel.odds.collectAsState()
     val game = games.find { it.gameId == gameId }
+
     LaunchedEffect(Unit) {
         if (games.isEmpty()) {
             viewModel.fetchGames()
+        }
+    }
+
+    LaunchedEffect(game) {
+        if (game != null) {
+            viewModel.fetchOdds(gameId = game.gameId, gameDate = game.gameDate)
         }
     }
 
@@ -80,6 +91,7 @@ fun PlaceBetScreen(
             else -> {
                 PlaceBetForm(
                     game = game,
+                    odds = odds,
                     navController = navController,
                     modifier = Modifier.padding(padding),
                 )
@@ -91,12 +103,15 @@ fun PlaceBetScreen(
 @Composable
 fun PlaceBetForm(
     game: GameDetails,
+    odds: GameOdds?,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
     var selectedTeam by remember { mutableStateOf("") }
     var wagerAmount by remember { mutableStateOf("") }
+    var betPlaced by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
     val awayLogo = getLogoResId(game.away.lowercase())
     val homeLogo = getLogoResId(game.home.lowercase())
 
@@ -107,7 +122,6 @@ fun PlaceBetForm(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 🏟 Centered logos and matchup
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -133,12 +147,56 @@ fun PlaceBetForm(
             style = MaterialTheme.typography.bodyMedium
         )
 
+        if (odds != null) {
+            val sportsBook = odds?.sportsBooks?.firstOrNull()
+            val book = sportsBook?.odds
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("📈 Betting Odds", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("💵 Moneyline")
+                    Text("${game.away}: ${book?.awayTeamMLOdds ?: "N/A"}")
+                    Text("${game.home}: ${book?.homeTeamMLOdds ?: "N/A"}")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("📊 Run Line")
+                    Text("${game.away}: ${book?.awayTeamRunLine ?: "-"} (${book?.awayTeamRunLineOdds ?: "-"})")
+                    Text("${game.home}: ${book?.homeTeamRunLine ?: "-"} (${book?.homeTeamRunLineOdds ?: "-"})")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("🔢 Over/Under")
+                    Text("Total Over: ${book?.totalOver ?: "-"} (${book?.totalOverOdds ?: "-"})")
+                    Text("Total Under: ${book?.totalUnder ?: "-"} (${book?.totalUnderOdds ?: "-"})")
+                }
+            }
+        } else {
+            Text("Loading betting odds...")
+        }
+
         Text("Select Team to Win:")
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = { selectedTeam = game.away }) {
+            Button(
+                onClick = { selectedTeam = game.away },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedTeam == game.away) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                )
+            ) {
                 Text(game.away)
             }
-            Button(onClick = { selectedTeam = game.home }) {
+
+            Button(
+                onClick = { selectedTeam = game.home },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedTeam == game.home) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                )
+            ) {
                 Text(game.home)
             }
         }
@@ -165,8 +223,18 @@ fun PlaceBetForm(
 //                )
 //                viewModel.placeBet(prediction)
                 navController.popBackStack() // Go back to previous scree
+                betPlaced = true
+                Toast.makeText(
+                    context,
+                    "Bet placed on $selectedTeam for $$wagerAmount",
+                    Toast.LENGTH_SHORT
+                ).show()
+                navController.popBackStack()
             },
             enabled = selectedTeam.isNotEmpty() && wagerAmount.isNotEmpty(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (betPlaced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+            ),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Place Bet on $selectedTeam")
@@ -183,6 +251,3 @@ fun PlaceBetForm(
         )
     }
 }
-
-
-

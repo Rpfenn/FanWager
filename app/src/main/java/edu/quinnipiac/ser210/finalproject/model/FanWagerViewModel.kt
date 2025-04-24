@@ -2,6 +2,7 @@ package edu.quinnipiac.ser210.finalproject
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,9 +14,14 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.GameOdds
 import edu.quinnipiac.ser210.finalproject.model.LeaderboardEntry
+import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
+import edu.quinnipiac.ser210.finalproject.network.RetrofitInstance.api
+import kotlinx.coroutines.launch
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import edu.quinnipiac.ser210.finalproject.api.ApiClient
 import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
 import edu.quinnipiac.ser210.finalproject.data.Prediction
 import kotlinx.coroutines.Dispatchers
@@ -26,10 +32,15 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
     val games: StateFlow<List<GameDetails>> = _games
 
+    private val _odds = MutableStateFlow<GameOdds?>(null)
+    val odds: StateFlow<GameOdds?> = _odds
+
     private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
     val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard
 
     private val client = OkHttpClient()
+
+    private val api = ApiClient.retrofitService
 
     private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
     private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
@@ -79,7 +90,8 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                                     away = game.away,
                                     home = game.home,
                                     gameTime = game.gameTime,
-                                    gameStatus = inferredStatus
+                                    gameStatus = inferredStatus,
+                                    gameDate = game.gameDate
                                 )
                             }
 
@@ -105,6 +117,33 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
             repository.insertPrediction(prediction)
         }
     }
+
+    fun fetchOdds(gameId: String, gameDate: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("TankAPI", "📡 Fetching betting odds for $gameDate ($gameId)")
+                Log.d("TankAPI", "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
+                val response = api.getBettingOdds(gameDate,
+                    apiKey = apiKey,
+                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
+                if (response.isSuccessful) {
+                    val allOdds = response.body()?.body ?: emptyList()
+                    val matchingGame = allOdds.find { it.gameID == gameId }
+                    if (matchingGame != null) {
+                        _odds.value = matchingGame
+                        Log.d("TankAPI", "✅ Found odds for $gameId with ${matchingGame.sportsBooks.size} books")
+                    } else {
+                        Log.w("TankAPI", "⚠️ No odds found for $gameId")
+                    }
+                } else {
+                    Log.e("TankAPI", "❌ API Error (${response.code()}): ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("TankAPI", "❌ Exception while fetching odds", e)
+            }
+        }
+    }
+
 
     fun loadFakeLeaderboard() {
         val fakeLeaderboard = listOf(
