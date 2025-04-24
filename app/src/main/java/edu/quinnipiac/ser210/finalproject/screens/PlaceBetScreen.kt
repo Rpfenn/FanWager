@@ -18,6 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
+import edu.quinnipiac.ser210.finalproject.data.AppDatabase
+import edu.quinnipiac.ser210.finalproject.data.Prediction
+import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModelFactory
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
 import edu.quinnipiac.ser210.finalproject.model.GameOdds
 import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
@@ -26,9 +29,14 @@ import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
 @Composable
 fun PlaceBetScreen(
     navController: NavController,
-    gameId: String,
-    viewModel: FanWagerViewModel = viewModel()
+    gameId: String
+    //viewModel: FanWagerViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context) }
+    val viewModel: FanWagerViewModel = viewModel(
+        factory = FanWagerViewModelFactory(db)
+    )
     val games by viewModel.games.collectAsState()
     val odds by viewModel.odds.collectAsState()
     val game = games.find { it.gameId == gameId }
@@ -85,7 +93,7 @@ fun PlaceBetScreen(
                     game = game,
                     odds = odds,
                     navController = navController,
-                    modifier = Modifier.padding(padding)
+                    modifier = Modifier.padding(padding),
                 )
             }
         }
@@ -207,6 +215,14 @@ fun PlaceBetForm(
 
         Button(
             onClick = {
+                //Unimplemented function to add prediction
+//                val prediction = Prediction(
+//                    userOwnerId = userId,
+//                    gameId = gameId.toIntOrNull() ?: 0,
+//                    predictedWinner = selectedTeam!!
+//                )
+//                viewModel.placeBet(prediction)
+                navController.popBackStack() // Go back to previous scree
                 betPlaced = true
                 Toast.makeText(
                     context,

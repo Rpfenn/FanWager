@@ -1,7 +1,14 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+//    alias(libs.plugins.android.application)
+//    alias(libs.plugins.kotlin.android)
+//    alias(libs.plugins.kotlin.compose)
+//    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    id("org.jetbrains.kotlin.plugin.compose")
+
+
 }
 
 android {
@@ -52,6 +59,11 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
 
+    implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
+    implementation("androidx.core:core-ktx:1.15.0")
+    ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
+
     implementation(libs.logging.interceptor)
 
     implementation(libs.runtime.livedata)
@@ -62,6 +74,8 @@ dependencies {
 
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,4 +84,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
 }
