@@ -2,26 +2,18 @@ package edu.quinnipiac.ser210.finalproject.model
 
 data class SportsBookOdds(
     val sportsBook: String,
-    val odds: OddsDetails
+    val odds: OddsDetail
 )
 
-data class OddsDetails(
-    val awayTeamMLOdds: String?,
-    val homeTeamMLOdds: String?,
-    val awayTeamRunLine: String?,
-    val homeTeamRunLine: String?,
-    val awayTeamRunLineOdds: String?,
-    val homeTeamRunLineOdds: String?,
-    val totalOver: String?,
+data class OddsDetail(
     val totalUnder: String?,
+    val totalOver: String?,
+    val totalUnderOdds: String?,
     val totalOverOdds: String?,
-    val totalUnderOdds: String?
-)
-
-data class GameOdds(
-    val gameID: String,
-    val gameDate: String,
-    val homeTeam: String,
-    val awayTeam: String,
-    val sportsBooks: List<SportsBookOdds>
+    val awayTeamRunLine: String?,
+    val awayTeamRunLineOdds: String?,
+    val awayTeamMLOdds: String?,
+    val homeTeamRunLine: String?,
+    val homeTeamRunLineOdds: String?,
+    val homeTeamMLOdds: String?
 )

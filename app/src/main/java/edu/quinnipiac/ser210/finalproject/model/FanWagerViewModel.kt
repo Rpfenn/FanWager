@@ -14,8 +14,9 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import edu.quinnipiac.ser210.finalproject.model.Game
-import edu.quinnipiac.ser210.finalproject.model.LeaderboardEntry
 import edu.quinnipiac.ser210.finalproject.model.GameOdds
+import edu.quinnipiac.ser210.finalproject.model.LeaderboardEntry
+import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
 import edu.quinnipiac.ser210.finalproject.network.RetrofitInstance.api
 import kotlinx.coroutines.launch
 
@@ -24,8 +25,8 @@ class FanWagerViewModel : ViewModel() {
     private val _games = MutableStateFlow<List<GameDetails>>(emptyList())
     val games: StateFlow<List<GameDetails>> = _games
 
-    private val _odds = MutableStateFlow<List<GameOdds>>(emptyList())
-    val odds: StateFlow<List<GameOdds>> = _odds
+    private val _odds = MutableStateFlow<GameOdds?>(null)
+    val odds: StateFlow<GameOdds?> = _odds
 
     private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
     val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard
@@ -82,7 +83,8 @@ class FanWagerViewModel : ViewModel() {
                                     away = game.away,
                                     home = game.home,
                                     gameTime = game.gameTime,
-                                    gameStatus = inferredStatus
+                                    gameStatus = inferredStatus,
+                                    gameDate = game.gameDate
                                 )
                             }
 
@@ -99,22 +101,32 @@ class FanWagerViewModel : ViewModel() {
         })
     }
 
-    fun fetchOdds(gameDate: String) {
+    fun fetchOdds(gameId: String, gameDate: String) {
         viewModelScope.launch {
             try {
-                val response = api.getMLBBettingOdds(gameDate)
+                Log.d("TankAPI", "📡 Fetching betting odds for $gameDate ($gameId)")
+                Log.d("TankAPI", "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
+                val response = api.getBettingOdds(gameDate,
+                    apiKey = apiKey,
+                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com")
                 if (response.isSuccessful) {
-                    val gameOdds = response.body() ?: emptyList()
-                    _odds.value = gameOdds
-                    Log.d("TankAPI", "✅ Odds loaded: ${gameOdds.size} items")
+                    val allOdds = response.body()?.body ?: emptyList()
+                    val matchingGame = allOdds.find { it.gameID == gameId }
+                    if (matchingGame != null) {
+                        _odds.value = matchingGame
+                        Log.d("TankAPI", "✅ Found odds for $gameId with ${matchingGame.sportsBooks.size} books")
+                    } else {
+                        Log.w("TankAPI", "⚠️ No odds found for $gameId")
+                    }
                 } else {
-                    Log.e("TankAPI", "❌ Failed to load odds: ${response.code()}")
+                    Log.e("TankAPI", "❌ API Error (${response.code()}): ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("TankAPI", "🔥 Odds fetch failed", e)
+                Log.e("TankAPI", "❌ Exception while fetching odds", e)
             }
         }
     }
+
 
     fun loadFakeLeaderboard() {
         val fakeLeaderboard = listOf(

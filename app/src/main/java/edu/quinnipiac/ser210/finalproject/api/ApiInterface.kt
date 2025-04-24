@@ -1,12 +1,13 @@
 package edu.quinnipiac.ser210.finalproject.api
 
 import edu.quinnipiac.ser210.finalproject.model.Game
-import edu.quinnipiac.ser210.finalproject.model.GameOdds
+import edu.quinnipiac.ser210.finalproject.model.OddsResponse
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Headers
 import retrofit2.http.Query
 
 interface ApiInterface {
@@ -20,10 +21,14 @@ interface ApiInterface {
         @Header("X-RapidAPI-Host") host: String
     ): Response<Map<String, Game>>
 
-    @GET("/mlb/getMLBBettingOdds")
-    suspend fun getMLBBettingOdds(
-        @Query("gameDate") gameDate: String
-    ): Response<List<GameOdds>>
+    @GET("getMLBBettingOdds")
+    suspend fun getBettingOdds(
+        @Query("gameDate") gameDate: String,
+        @Query("playerProps") playerProps: Boolean = true,
+        @Query("itemFormat") itemFormat: String = "list",
+        @Header("X-RapidAPI-Key") apiKey: String,
+        @Header("X-RapidAPI-Host") host: String
+    ): Response<OddsResponse>
 
     companion object {
         private const val BASE_URL = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/"
