@@ -1,6 +1,8 @@
 package edu.quinnipiac.ser210.finalproject.api
 
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
+import edu.quinnipiac.ser210.finalproject.model.MLBScoreResponse
 import edu.quinnipiac.ser210.finalproject.model.OddsResponse
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -29,6 +31,13 @@ interface ApiInterface {
         @Header("X-RapidAPI-Key") apiKey: String,
         @Header("X-RapidAPI-Host") host: String
     ): Response<OddsResponse>
+
+    @GET("getDailyScoreboardLive")
+    suspend fun getDailyScoreboardLive(
+        @Query("gameDate") gameDate: String,
+        @Header("X-RapidAPI-Key") apiKey: String,
+        @Header("X-RapidAPI-Host") host: String
+    ): Response<MLBScoreResponse>
 
     companion object {
         private const val BASE_URL = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/"
