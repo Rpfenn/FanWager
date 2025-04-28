@@ -131,9 +131,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                     "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
                 )
                 val response = api.getBettingOdds(
-                    gameDate,
-                    apiKey = apiKey,
-                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
+                    gameDate
                 )
                 if (response.isSuccessful) {
                     val allOdds = response.body()?.body ?: emptyList()
@@ -160,10 +158,8 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         viewModelScope.launch {
             try {
                 val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
-                val response = api.getDailyScoreboardLive(
-                    gameDate = today,
-                    apiKey = apiKey,
-                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
+                val response = api.getGames(
+                    gameDate = today
                 )
 
                 if (response.isSuccessful) {
@@ -188,7 +184,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                                 home = game.home,
                                 gameTime = game.gameTime,
                                 gameStatus = inferredStatus,
-                                gameDate = game.gameDate,
+                                gameDate = today,
                                 awayScore = awayScore,
                                 homeScore = homeScore
                             )

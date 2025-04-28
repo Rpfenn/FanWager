@@ -15,29 +15,18 @@ import retrofit2.http.Query
 interface ApiInterface {
 
     // Updated: Fetch live MLB game scores with headers passed per call
-    @GET("getMLBScoresOnly")
+    @GET("/getMLBScoresOnly")
     suspend fun getGames(
         @Query("gameDate") gameDate: String,
         @Query("topPerformers") topPerformers: Boolean = true,
-        @Header("X-RapidAPI-Key") apiKey: String,
-        @Header("X-RapidAPI-Host") host: String
-    ): Response<Map<String, Game>>
+    ): Response<MLBScoreResponse>
 
-    @GET("getMLBBettingOdds")
+    @GET("/getMLBBettingOdds")
     suspend fun getBettingOdds(
         @Query("gameDate") gameDate: String,
         @Query("playerProps") playerProps: Boolean = true,
-        @Query("itemFormat") itemFormat: String = "list",
-        @Header("X-RapidAPI-Key") apiKey: String,
-        @Header("X-RapidAPI-Host") host: String
+        @Query("itemFormat") itemFormat: String = "list"
     ): Response<OddsResponse>
-
-    @GET("getDailyScoreboardLive")
-    suspend fun getDailyScoreboardLive(
-        @Query("gameDate") gameDate: String,
-        @Header("X-RapidAPI-Key") apiKey: String,
-        @Header("X-RapidAPI-Host") host: String
-    ): Response<MLBScoreResponse>
 
     companion object {
         private const val BASE_URL = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/"
