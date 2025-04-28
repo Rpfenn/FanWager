@@ -30,6 +30,36 @@ object Routes {
     // const val PLACE_BET = "place_bet"
 }
 
+//@OptIn(ExperimentalAnimationApi::class)
+//@Composable
+//fun FanWagerNavigation(navController: NavHostController) {
+//
+//    NavHost(
+//        navController = navController,
+//        startDestination = Screens.HomeScreen.route,
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//
+//        Screens.entries.forEach { screen ->
+//            composable(screen.route) {
+//                when (screen) {
+//                    Screens.HomeScreen -> HomeScreen(navController)
+//                    Screens.HistoryScreen -> HistoryScreen()
+//                    Screens.LeaderBoardScreen -> LeaderBoardScreen()
+//                    Screens.SettingsScreen -> SettingsScreen()
+//                }
+//            }
+//        }
+////        composable(Routes.HOME) {
+////            HomeScreen(navController = navController)
+////        }
+//        composable("place_bet/{gameId}") { backStackEntry ->
+//            val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
+//            PlaceBetScreen(navController = navController, gameId = gameId)
+//        }
+//    }
+//}
+
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
 //fun AppBar(

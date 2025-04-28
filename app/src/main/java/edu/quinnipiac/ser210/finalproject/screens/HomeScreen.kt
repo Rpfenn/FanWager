@@ -27,10 +27,12 @@ fun HomeScreen(navController: NavController) {
     val viewModel: FanWagerViewModel = viewModel(
         factory = FanWagerViewModelFactory(db)
     )
+
     val games by viewModel.games.collectAsState()
 
 
     LaunchedEffect(Unit) {
+        viewModel.createDefaultUserIfNeeded()
         viewModel.fetchGames()
     }
 

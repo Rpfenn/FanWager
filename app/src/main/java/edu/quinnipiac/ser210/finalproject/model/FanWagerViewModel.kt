@@ -24,6 +24,7 @@ import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.api.ApiClient
 import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
 import edu.quinnipiac.ser210.finalproject.data.Prediction
+import edu.quinnipiac.ser210.finalproject.data.User
 import edu.quinnipiac.ser210.finalproject.ui.theme.ColorSchemeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -171,4 +172,19 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     fun setTheme(option: ColorSchemeType) {
         _theme.value = option
     }
+
+    fun createDefaultUserIfNeeded() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val existingUser = repository.getAnyUser()
+            if (existingUser == null) {
+                repository.insertUser(
+                    User(
+                        username = "DefaultUser", // whatever you want
+                        currency = 1000 // starting currency
+                    )
+                )
+            }
+        }
+    }
+
 }

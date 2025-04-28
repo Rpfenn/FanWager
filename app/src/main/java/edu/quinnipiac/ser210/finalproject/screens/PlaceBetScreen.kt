@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
 import edu.quinnipiac.ser210.finalproject.data.AppDatabase
+import edu.quinnipiac.ser210.finalproject.data.GlobalVariables
 import edu.quinnipiac.ser210.finalproject.data.Prediction
 import edu.quinnipiac.ser210.finalproject.model.FanWagerViewModelFactory
 import edu.quinnipiac.ser210.finalproject.model.GameDetails
@@ -94,6 +95,7 @@ fun PlaceBetScreen(
                     odds = odds,
                     navController = navController,
                     modifier = Modifier.padding(padding),
+                    viewModel = viewModel
                 )
             }
         }
@@ -105,7 +107,8 @@ fun PlaceBetForm(
     game: GameDetails,
     odds: GameOdds?,
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: FanWagerViewModel
 ) {
     var selectedTeam by remember { mutableStateOf("") }
     var wagerAmount by remember { mutableStateOf("") }
@@ -216,12 +219,14 @@ fun PlaceBetForm(
         Button(
             onClick = {
                 //Unimplemented function to add prediction
-//                val prediction = Prediction(
-//                    userOwnerId = userId,
-//                    gameId = gameId.toIntOrNull() ?: 0,
-//                    predictedWinner = selectedTeam!!
-//                )
-//                viewModel.placeBet(prediction)
+                val prediction = Prediction(
+                    userOwnerId = GlobalVariables.currentUser,
+                    gameId = game.gameId,
+                    predictedWinner = selectedTeam!!,
+                    bettingOdds = "-150",
+                    betAmount = wagerAmount.toInt()
+                )
+                viewModel.placeBet(prediction)
                 betPlaced = true
                 Toast.makeText(
                     context,

@@ -17,6 +17,14 @@ class FanWagerRepository(private val db: AppDatabase) {
         return db.gameDao().getAllGames()
     }
 
+    suspend fun getAnyUser(): User? {
+        return db.userDao().getAnyUser()
+    }
+
+    suspend fun insertUser(user: User) {
+        db.userDao().insertUser(user)
+    }
+
 
 
 }

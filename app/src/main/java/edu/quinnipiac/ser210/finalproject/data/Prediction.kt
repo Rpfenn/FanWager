@@ -18,8 +18,10 @@ import edu.quinnipiac.ser210.finalproject.model.GameDetails
 data class Prediction (
     @PrimaryKey(autoGenerate = true) val predictionId: Int = 0,
     val userOwnerId: Int,
-    val gameId: Int,
-    val predictedWinner: String
+    val gameId: String,
+    val predictedWinner: String,
+    val bettingOdds: String,
+    val betAmount: Int
 
 
 )
