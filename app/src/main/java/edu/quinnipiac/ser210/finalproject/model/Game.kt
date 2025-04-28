@@ -1,5 +1,7 @@
 package edu.quinnipiac.ser210.finalproject.model
 
+import LineScore
+
 data class Game(
     val gameID: String,              // ← NEW: unique ID from API
     val away: String,
@@ -13,11 +15,3 @@ data class Game(
     val lineScore: LineScore?        // ← Nullable in case the game hasn't started yet
 )
 
-data class LineScore(
-    val away: TeamScore,
-    val home: TeamScore
-)
-
-data class TeamScore(
-    val R: String
-)

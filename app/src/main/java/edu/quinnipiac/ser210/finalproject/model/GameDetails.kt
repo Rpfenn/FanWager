@@ -10,5 +10,7 @@ data class GameDetails(
     val home: String,
     val gameTime: String,
     val gameStatus: String,
-    val gameDate: String // NEW: "Scheduled", "In Progress", "Completed", etc.
+    val gameDate: String, // NEW: "Scheduled", "In Progress", "Completed", etc.
+    val awayScore: String? = null,
+    val homeScore: String? = null
 )
