@@ -27,13 +27,13 @@ fun HomeScreen(navController: NavController) {
     val viewModel: FanWagerViewModel = viewModel(
         factory = FanWagerViewModelFactory(db)
     )
-
     val games by viewModel.games.collectAsState()
 
 
     LaunchedEffect(Unit) {
         viewModel.createDefaultUserIfNeeded()
-        viewModel.fetchGames()
+        //viewModel.fetchGames()
+        viewModel.fetchDailyScoreboardLive()
     }
 
     val inProgressGames = games.filter { it.gameStatus == "In Progress" }
@@ -127,10 +127,19 @@ fun GameCard(game: GameDetails, onClick: () -> Unit) {
                     text = "${game.away} @ ${game.home}",
                     style = MaterialTheme.typography.titleMedium
                 )
-                Text(
-                    text = "Game Time: ${game.gameTime}",
-                    style = MaterialTheme.typography.bodySmall
-                )
+
+                if (game.gameStatus == "In Progress" || game.gameStatus == "Completed") {
+                    Text(
+                        text = "Score: ${game.awayScore ?: "-"} - ${game.homeScore ?: "-"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                } else {
+                    Text(
+                        text = "Game Time: ${game.gameTime}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
                 Text(
                     text = "Status: ${game.gameStatus}",
                     style = MaterialTheme.typography.bodySmall

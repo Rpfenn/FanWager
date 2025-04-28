@@ -3,11 +3,11 @@
 
 
 data class LineScore(
-    val away: TeamScore,
-    val home: TeamScore
+    val away: TeamLineScore,
+    val home: TeamLineScore
 )
 
-data class TeamScore(
+data class TeamLineScore(
     val team: String,
     val R: String,
     val H: String,

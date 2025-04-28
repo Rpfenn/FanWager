@@ -1,6 +1,8 @@
 package edu.quinnipiac.ser210.finalproject.api
 
 import edu.quinnipiac.ser210.finalproject.model.Game
+import edu.quinnipiac.ser210.finalproject.model.MLBGameResponse
+import edu.quinnipiac.ser210.finalproject.model.MLBScoreResponse
 import edu.quinnipiac.ser210.finalproject.model.OddsResponse
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -13,21 +15,17 @@ import retrofit2.http.Query
 interface ApiInterface {
 
     // Updated: Fetch live MLB game scores with headers passed per call
-    @GET("getMLBScoresOnly")
+    @GET("/getMLBScoresOnly")
     suspend fun getGames(
         @Query("gameDate") gameDate: String,
         @Query("topPerformers") topPerformers: Boolean = true,
-        @Header("X-RapidAPI-Key") apiKey: String,
-        @Header("X-RapidAPI-Host") host: String
-    ): Response<Map<String, Game>>
+    ): Response<MLBScoreResponse>
 
-    @GET("getMLBBettingOdds")
+    @GET("/getMLBBettingOdds")
     suspend fun getBettingOdds(
         @Query("gameDate") gameDate: String,
         @Query("playerProps") playerProps: Boolean = true,
-        @Query("itemFormat") itemFormat: String = "list",
-        @Header("X-RapidAPI-Key") apiKey: String,
-        @Header("X-RapidAPI-Host") host: String
+        @Query("itemFormat") itemFormat: String = "list"
     ): Response<OddsResponse>
 
     companion object {

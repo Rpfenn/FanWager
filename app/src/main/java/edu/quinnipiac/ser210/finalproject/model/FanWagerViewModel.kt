@@ -96,7 +96,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                                     home = game.home,
                                     gameTime = game.gameTime,
                                     gameStatus = inferredStatus,
-                                    gameDate = game.gameDate
+                                    gameDate = today
                                 )
                             }
 
@@ -132,9 +132,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                     "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
                 )
                 val response = api.getBettingOdds(
-                    gameDate,
-                    apiKey = apiKey,
-                    host = "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
+                    gameDate
                 )
                 if (response.isSuccessful) {
                     val allOdds = response.body()?.body ?: emptyList()
@@ -157,6 +155,60 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         }
     }
 
+    fun fetchDailyScoreboardLive() {
+        viewModelScope.launch {
+            try {
+                val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+                val response = api.getGames(
+                    gameDate = today
+                )
+
+                if (response.isSuccessful) {
+                    val body = response.body()?.body  // 🚨 Note: accessing .body inside MLBGameResponse
+                    if (body != null) {
+                        val nowEpoch = System.currentTimeMillis() / 1000
+                        val gameList = body.map { (gameId, game) ->
+
+                            val inferredStatus = when {
+                                game.gameStatus == "In Progress" -> "In Progress"
+                                game.gameStatus == "Completed" -> "Completed"
+                                game.gameTime_epoch.toDoubleOrNull()?.let { it <= nowEpoch } == true -> "In Progress"
+                                else -> "Scheduled"
+                            }
+
+                            val awayScore = game.lineScore?.away?.R
+                            val homeScore = game.lineScore?.home?.R
+
+                            GameDetails(
+                                gameId = gameId,
+                                away = game.away,
+                                home = game.home,
+                                gameTime = game.gameTime,
+                                gameStatus = inferredStatus,
+                                gameDate = today,
+                                awayScore = awayScore,
+                                homeScore = homeScore
+                            )
+                        }
+
+                        _games.value = gameList
+
+                        viewModelScope.launch(Dispatchers.IO) {
+                            repository.insertGames(gameList)
+                        }
+
+                        Log.d("TankAPI", "✅ Loaded ${gameList.size} daily live games with scores.")
+                    } else {
+                        Log.e("TankAPI", "❌ Empty body in Daily Scoreboard Live response")
+                    }
+                } else {
+                    Log.e("TankAPI", "❌ API Error (${response.code()}): ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("TankAPI", "❌ Exception while fetching daily scoreboard live", e)
+            }
+        }
+    }
     fun loadFakeLeaderboard() {
         val fakeLeaderboard = listOf(
             LeaderboardEntry("Tannon", 5000),
