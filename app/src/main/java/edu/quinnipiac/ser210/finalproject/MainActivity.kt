@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
                                     // Spacing between icon and app name
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Text(
-                                        text = getString(R.string.app_name),
+                                        text = "FanWager",
                                         style = MaterialTheme.typography.bodyLarge.copy(
                                             fontWeight = FontWeight.Normal,
                                             color = Color.White

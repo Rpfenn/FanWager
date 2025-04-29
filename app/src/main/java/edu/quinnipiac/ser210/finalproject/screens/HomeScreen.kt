@@ -31,6 +31,8 @@ fun HomeScreen(navController: NavController) {
 
 
     LaunchedEffect(Unit) {
+        viewModel.createDefaultUserIfNeeded()
+        //viewModel.fetchGames()
         viewModel.fetchDailyScoreboardLive()
     }
 

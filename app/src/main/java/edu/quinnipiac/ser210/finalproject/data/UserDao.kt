@@ -13,4 +13,7 @@ interface UserDao {
     suspend fun getAllUsers(): List<User>
 
 
+    @Query("SELECT * FROM users LIMIT 1")
+    suspend fun getAnyUser(): User?
+
 }
