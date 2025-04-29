@@ -20,8 +20,12 @@ data class Prediction (
     val userOwnerId: Int,
     val gameId: String,
     val predictedWinner: String,
+    val betType: String,
+    val line: String,
     val bettingOdds: String,
-    val betAmount: Int
+    val betAmount: Int,
+    val concluded:Boolean,
+    val result:String
 
 
 )
