@@ -15,145 +15,50 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import edu.quinnipiac.ser210.finalproject.screens.HomeScreen
-import edu.quinnipiac.ser210.finalproject.screens.PlaceBetScreen
-import androidx.compose.material3.SnackbarHostState
 import androidx.navigation.NavHostController
 import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
-import edu.quinnipiac.ser210.finalproject.screens.HistoryScreen
-import edu.quinnipiac.ser210.finalproject.screens.LeaderBoardScreen
-import edu.quinnipiac.ser210.finalproject.screens.SettingsScreen
+import edu.quinnipiac.ser210.finalproject.screens.*
 
 object Routes {
+    const val SPLASH = "splash"
     const val HOME = "home"
-    // Can add more routes here like:
-    // const val PLACE_BET = "place_bet"
+    const val PLACE_BET = "place_bet"
+    const val LEADERBOARD = "leaderboard"
+    const val HISTORY = "history"
+    const val SETTINGS = "settings"
 }
-
-//@OptIn(ExperimentalAnimationApi::class)
-//@Composable
-//fun FanWagerNavigation(navController: NavHostController) {
-//
-//    NavHost(
-//        navController = navController,
-//        startDestination = Screens.HomeScreen.route,
-//        modifier = Modifier.fillMaxSize()
-//    ) {
-//
-//        Screens.entries.forEach { screen ->
-//            composable(screen.route) {
-//                when (screen) {
-//                    Screens.HomeScreen -> HomeScreen(navController)
-//                    Screens.HistoryScreen -> HistoryScreen()
-//                    Screens.LeaderBoardScreen -> LeaderBoardScreen()
-//                    Screens.SettingsScreen -> SettingsScreen()
-//                }
-//            }
-//        }
-////        composable(Routes.HOME) {
-////            HomeScreen(navController = navController)
-////        }
-//        composable("place_bet/{gameId}") { backStackEntry ->
-//            val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
-//            PlaceBetScreen(navController = navController, gameId = gameId)
-//        }
-//    }
-//}
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun AppBar(
-//    currentScreen: String,
-//    navController: NavController,
-//    navigateUp: () -> Unit,
-//    context: Context,
-//    textToShare: String,
-//    onHelpClick: () -> Unit,
-//    onSettingsClick: () -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    val canNavigateBack = navController.previousBackStackEntry != null
-//    var menuExpanded by remember { mutableStateOf(false) }
-//
-//    TopAppBar(
-//        title = { Text("FanWager - MLB") },
-//        colors = TopAppBarDefaults.mediumTopAppBarColors(
-//            containerColor = MaterialTheme.colorScheme.primary
-//        ),
-//        modifier = modifier,
-//        navigationIcon = {
-//            if (canNavigateBack) {
-//                IconButton(onClick = navigateUp) {
-//                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                }
-//            }
-//        },
-//        actions = {
-//            if (textToShare.isNotBlank()) {
-//                IconButton(onClick = {
-//                    val intent = Intent(Intent.ACTION_SEND).apply {
-//                        type = "text/plain"
-//                        putExtra(Intent.EXTRA_SUBJECT, "Check this out")
-//                        putExtra(Intent.EXTRA_TEXT, textToShare)
-//                    }
-//                    context.startActivity(Intent.createChooser(intent, "Share via"))
-//                }) {
-//                    Icon(Icons.Default.Share, contentDescription = "Share")
-//                }
-//            }
-//
-//            IconButton(onClick = { menuExpanded = true }) {
-//                Icon(Icons.Default.MoreVert, contentDescription = "More Options")
-//            }
-//
-//            DropdownMenu(
-//                expanded = menuExpanded,
-//                onDismissRequest = { menuExpanded = false }
-//            ) {
-//                DropdownMenuItem(
-//                    text = { Text("Settings") },
-//                    onClick = {
-//                        menuExpanded = false
-//                        onSettingsClick()
-//                    }
-//                )
-//                DropdownMenuItem(
-//                    text = { Text("Help") },
-//                    onClick = {
-//                        menuExpanded = false
-//                        onHelpClick()
-//                    }
-//                )
-//            }
-//        }
-//    )
-//}
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun FanWagerNavigation(navController: NavHostController,
-                       viewModel: FanWagerViewModel
+fun FanWagerNavigation(
+    navController: NavHostController,
+    viewModel: FanWagerViewModel
 ) {
-
     NavHost(
         navController = navController,
-        startDestination = Screens.HomeScreen.route,
+        startDestination = Routes.SPLASH, // 🚀 Now SplashScreen is the start
         modifier = Modifier.fillMaxSize()
     ) {
-
-        Screens.entries.forEach { screen ->
-            composable(screen.route) {
-                when (screen) {
-                    Screens.HomeScreen -> HomeScreen(navController)
-                    Screens.HistoryScreen -> HistoryScreen()
-                    Screens.LeaderBoardScreen -> LeaderBoardScreen()
-                    Screens.SettingsScreen -> SettingsScreen(viewModel = viewModel)
-                }
-            }
+        // Splash Screen first
+        composable(Routes.SPLASH) {
+            SplashScreen(navController)
         }
-//        composable(Routes.HOME) {
-//            HomeScreen(navController = navController)
-//        }
+
+        // Main screens
+        composable(Screens.HomeScreen.route) {
+            HomeScreen(navController)
+        }
+        composable(Screens.HistoryScreen.route) {
+            HistoryScreen()
+        }
+        composable(Screens.LeaderBoardScreen.route) {
+            LeaderBoardScreen()
+        }
+        composable(Screens.SettingsScreen.route) {
+            SettingsScreen(viewModel = viewModel)
+        }
+
+        // Special place bet screen with parameter
         composable("place_bet/{gameId}") { backStackEntry ->
             val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
             PlaceBetScreen(navController = navController, gameId = gameId)
