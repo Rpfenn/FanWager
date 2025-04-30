@@ -23,13 +23,22 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.api.ApiClient
 import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
+import edu.quinnipiac.ser210.finalproject.data.GlobalVariables
 import edu.quinnipiac.ser210.finalproject.data.Prediction
 import edu.quinnipiac.ser210.finalproject.data.User
 import edu.quinnipiac.ser210.finalproject.ui.theme.ColorSchemeType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel() {
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
+    private val _currency = MutableStateFlow(0)
+    val currency: StateFlow<Int> = _currency
 
     private val _theme = MutableStateFlow(ColorSchemeType.LIGHT)
     val theme: StateFlow<ColorSchemeType> = _theme
@@ -42,6 +51,9 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
 
     private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
     val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard
+
+    private val _betPlacedSuccessfully = MutableStateFlow(false)
+    val betPlacedSuccessfully: StateFlow<Boolean> = _betPlacedSuccessfully
 
     private val client = OkHttpClient()
 
@@ -117,10 +129,27 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         })
     }
 
-    fun placeBet(prediction: Prediction){
+    fun placeBet(prediction: Prediction) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.insertPrediction(prediction)
+            val user = repository.getUserById(prediction.userOwnerId)
+            if (user != null && user.currency >= prediction.betAmount) {
+                val updatedUser = user.copy(currency = user.currency - prediction.betAmount)
+                repository.updateUser(updatedUser)
+
+                if (user.userId == GlobalVariables.currentUser) {
+                    _currency.value = updatedUser.currency
+                }
+
+                repository.insertPrediction(prediction)
+                _betPlacedSuccessfully.value = true
+            } else {
+                _errorMessage.value = "You do not have enough currency to place this bet."
+            }
         }
+    }
+
+    fun resetBetPlacedFlag() {
+        _betPlacedSuccessfully.value = false
     }
 
     fun fetchOdds(gameId: String, gameDate: String) {
@@ -193,6 +222,8 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
 
                         _games.value = gameList
 
+                        validateCompletedPredictions()
+
                         viewModelScope.launch(Dispatchers.IO) {
                             repository.insertGames(gameList)
                         }
@@ -231,12 +262,117 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
             if (existingUser == null) {
                 repository.insertUser(
                     User(
-                        username = "DefaultUser", // whatever you want
+                        username = "DefualtUser", // whatever you want
                         currency = 1000 // starting currency
                     )
                 )
             }
         }
+    }
+
+    fun validateCompletedPredictions() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val completedGames = _games.value.filter {
+                it.gameStatus == "Completed" && it.homeScore != null && it.awayScore != null
+            }
+
+            for (game in completedGames) {
+                val winner = when {
+                    game.homeScore!!.toInt() > game.awayScore!!.toInt() -> game.home
+                    game.homeScore.toInt() < game.awayScore!!.toInt() -> game.away
+                    else -> "TIE"
+                }
+
+                val predictions = repository.getUnconcludedPredictions(game.gameId)
+                for (prediction in predictions) {
+                    val user = repository.getUserById(prediction.userOwnerId) ?: continue
+
+                    val correct = when (prediction.betType) {
+                        "ML" -> prediction.predictedWinner == winner
+
+                        "RL" -> {
+                            val predictedScore = if (prediction.predictedWinner == game.home) game.homeScore!!.toDouble() else game.awayScore!!.toDouble()
+                            val opponentScore = if (prediction.predictedWinner == game.home) game.awayScore!!.toDouble() else game.homeScore!!.toDouble()
+                            val spread = prediction.line.toDoubleOrNull() ?: 0.0
+
+                            if (spread > 0) {
+                                predictedScore + spread > opponentScore
+                            } else {
+                                predictedScore > opponentScore + -spread
+                            }
+                        }
+
+                        "TO" -> {
+                            val total = game.homeScore!!.toDouble() + game.awayScore!!.toDouble()
+                            val target = prediction.line.toDoubleOrNull() ?: 0.0
+
+                            if (prediction.predictedWinner == "Over") {
+                                total > target
+                            } else {
+                                total < target
+                            }
+                        }
+
+                        else -> false
+                    }
+
+                    val winnings = if (correct) {
+                        val profit = calculateWinnings(prediction.betAmount, prediction.bettingOdds)
+                        profit + prediction.betAmount
+                    } else {
+                        0
+                    }
+
+                    val newCurrency = user.currency + winnings
+                    val updatedUser = user.copy(currency = newCurrency)
+                    repository.updateUser(updatedUser)
+
+                    if (user.userId == GlobalVariables.currentUser) {
+                        delay(200)
+                        val freshUser = repository.getUserById(user.userId)
+                        withContext(Dispatchers.Main) {
+                            _currency.value = freshUser?.currency ?: updatedUser.currency
+                        }
+                    }
+
+                    val resultText = if (correct) "win" else "loss"
+                    repository.markPredictionAsResult(prediction.predictionId, resultText)
+
+                    Log.d("Validation", "User ${user.username} $resultText prediction on ${game.gameId}. Winnings: $winnings")
+                }
+            }
+        }
+    }
+
+    fun calculateWinnings(betAmount: Int, odds: String): Int {
+        return try {
+            val cleanOdds = odds.replace(",", "").trim()
+            val value = cleanOdds.toInt()
+
+            if (value > 0) {
+                // Positive odds (e.g., +150)
+                (betAmount * value / 100.0).toInt()
+            } else {
+                // Negative odds (e.g., -110)
+                (betAmount * 100 / -value.toDouble()).toInt()
+            }
+        } catch (e: Exception) {
+            Log.e("BettingCalc", "Invalid odds format: $odds", e)
+            0 // fallback if odds can't be parsed
+        }
+    }
+
+    fun loadUserCurrency() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = repository.getAnyUser()
+            if (user != null) {
+                _currency.value = user.currency
+            }
+        }
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 
 }

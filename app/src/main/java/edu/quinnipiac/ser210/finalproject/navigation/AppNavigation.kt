@@ -61,7 +61,7 @@ fun FanWagerNavigation(
         // Special place bet screen with parameter
         composable("place_bet/{gameId}") { backStackEntry ->
             val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
-            PlaceBetScreen(navController = navController, gameId = gameId)
+            PlaceBetScreen(navController = navController, gameId = gameId, viewModel = viewModel)
         }
     }
 }

@@ -12,6 +12,12 @@ interface PredictionDao {
     @Query("SELECT * FROM predictions WHERE userOwnerId = :userId")
     suspend fun getPredictionsForUser(userId: Int): List<Prediction>
 
+    @Query("SELECT * FROM predictions WHERE gameId = :gameId AND concluded = 0")
+    suspend fun getUnconcludedPredictionsForGame(gameId: String): List<Prediction>
+
+    @Query("UPDATE predictions SET concluded = 1, result = :result WHERE predictionId = :predictionId")
+    suspend fun markPredictionResult(predictionId: Int, result: String)
+
 
 
 }

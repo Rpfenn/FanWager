@@ -25,6 +25,20 @@ class FanWagerRepository(private val db: AppDatabase) {
         db.userDao().insertUser(user)
     }
 
+    suspend fun getUnconcludedPredictions(gameId: String): List<Prediction> {
+        return db.predictionDao().getUnconcludedPredictionsForGame(gameId)
+    }
 
+    suspend fun markPredictionAsResult(predictionId: Int, result: String) {
+        db.predictionDao().markPredictionResult(predictionId, result)
+    }
+
+    suspend fun getUserById(id: Int): User? {
+        return db.userDao().getUserById(id)
+    }
+
+    suspend fun updateUser(user: User) {
+        db.userDao().updateUser(user)
+    }
 
 }
