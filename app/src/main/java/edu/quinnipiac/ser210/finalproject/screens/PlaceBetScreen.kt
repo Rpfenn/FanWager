@@ -31,14 +31,12 @@ import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
 @Composable
 fun PlaceBetScreen(
     navController: NavController,
-    gameId: String
-    //viewModel: FanWagerViewModel = viewModel()
+    gameId: String,
+    viewModel: FanWagerViewModel
 ) {
     val context = LocalContext.current
     val db = remember { AppDatabase.getDatabase(context) }
-    val viewModel: FanWagerViewModel = viewModel(
-        factory = FanWagerViewModelFactory(db)
-    )
+
     val games by viewModel.games.collectAsState()
     val odds by viewModel.odds.collectAsState()
     val game = games.find { it.gameId == gameId }
@@ -115,11 +113,27 @@ fun PlaceBetForm(
     var wagerAmount by remember { mutableStateOf("") }
     var selectedOdds by remember { mutableStateOf("") }
     var betType by remember { mutableStateOf("") }
-    var betPlaced by remember { mutableStateOf(false) }
     var line by remember { mutableStateOf("") }
     val context = LocalContext.current
     val awayLogo = getLogoResId(game.away.lowercase())
     val homeLogo = getLogoResId(game.home.lowercase())
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val betPlaced by viewModel.betPlacedSuccessfully.collectAsState()
+
+    LaunchedEffect(betPlaced) {
+        if (betPlaced) {
+            Toast.makeText(context, "Bet placed on $selectedTeam for \$$wagerAmount", Toast.LENGTH_SHORT).show()
+            viewModel.resetBetPlacedFlag()
+            navController.popBackStack()
+        }
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -154,7 +168,7 @@ fun PlaceBetForm(
         )
 
         if (odds != null) {
-            val sportsBook = odds?.sportsBooks?.firstOrNull()
+            val sportsBook = odds.sportsBooks.firstOrNull()
             val book = sportsBook?.odds
 
             Card(
@@ -162,274 +176,144 @@ fun PlaceBetForm(
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("📈 Betting Odds", style = MaterialTheme.typography.titleMedium)
+                    Text("\uD83D\uDCC8 Betting Odds", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Text("Team", fontSize = 18.sp)
+                        Text("Moneyline", fontSize = 18.sp)
+                        Text("Run Line", fontSize = 18.sp)
+                        Text("Over/Under", fontSize = 18.sp)
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Text("💵 Moneyline")
-                    Text("${game.away}: ${book?.awayTeamMLOdds ?: "N/A"}")
-                    Text("${game.home}: ${book?.homeTeamMLOdds ?: "N/A"}")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(game.away, fontSize = 16.sp)
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("📊 Run Line")
-                    Text("${game.away}: ${book?.awayTeamRunLine ?: "-"} (${book?.awayTeamRunLineOdds ?: "-"})")
-                    Text("${game.home}: ${book?.homeTeamRunLine ?: "-"} (${book?.homeTeamRunLineOdds ?: "-"})")
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("🔢 Over/Under")
-                    Text("Total Over: ${book?.totalOver ?: "-"} (${book?.totalOverOdds ?: "-"})")
-                    Text("Total Under: ${book?.totalUnder ?: "-"} (${book?.totalUnderOdds ?: "-"})")
-                }
-            }
-            //Text("Select Pick:")
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.align(Alignment.CenterHorizontally))
-            {
-                Row(horizontalArrangement = Arrangement.spacedBy(63.dp)){
-                    Text("Team")
-                    Text("ML")
-                    Text("RL")
-                    Text("Total")
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = game.away,
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                    //Away Moneyline button
-                    Button(
-                        onClick = {
+                        Button(onClick = {
                             selectedTeam = game.away
-                                  betType = "ML"
-                                  line = "ML"},
-                        modifier = Modifier.width(80.dp).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTeam == game.away && betType == "ML") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-
-                    ) {
-                        Text(""+book?.awayTeamMLOdds)
-                    }
-                    //Away Run Line
-                    Button(
-                        onClick = { selectedTeam = game.away
-                                  betType = "RL"
-                                  line = ""+book?.awayTeamRunLine
-                                  selectedOdds = ""+book?.awayTeamRunLineOdds},
-                        modifier = Modifier.width(80.dp).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTeam == game.away && betType == "RL") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-
-                        Column {
-                            Text("" + book?.awayTeamRunLine)
-                            Text("" + book?.awayTeamRunLineOdds)
+                            betType = "ML"
+                            line = "ML"
+                            selectedOdds = "${book?.awayTeamMLOdds}"
+                        }) {
+                            Text("${book?.awayTeamMLOdds}")
                         }
 
-                    }
-
-                    //Over Button
-                    Button(
-                        onClick = { selectedTeam = "Over"
-                                  betType = "TO"
-                                  line = ""+book?.totalOver
-                                  selectedOdds = ""+book?.totalOverOdds},
-                        modifier = Modifier.width(80.dp).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTeam == "Over") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Column{
-                            Text(""+ book?.totalOver)
-                            Text("" + book?.totalOverOdds)
-                        }
-
-                    }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        game.home,
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                    //Home Moneyline
-                    Button(
-                        onClick = { selectedTeam = game.home
-                                  betType = "ML"
-                                  line = "ML"
-                                  selectedOdds = ""+ book?.homeTeamMLOdds},
-                        modifier = Modifier.width(80.dp).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTeam == game.home && betType == "ML") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text(""+ book?.homeTeamMLOdds)
-                    }
-                    //Home Run line
-                    Button(
-                        onClick = { selectedTeam = game.home
+                        Button(onClick = {
+                            selectedTeam = game.away
                             betType = "RL"
-                            line = "" + book?.homeTeamRunLine
-                            selectedOdds = ""+ book?.homeTeamRunLineOdds},
-                        modifier = Modifier.width(80.dp).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTeam == game.home && betType == "RL") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Column {
-                            Text("" + book?.homeTeamRunLine)
-                            Text("" + book?.homeTeamRunLineOdds)
-                        }
-                    }
-                    //Under Button
-                    Button(
-                        onClick = { selectedTeam = "Under"
-                            betType = "TO"
-                            line = "" + book?.totalUnder
-                            selectedOdds = ""+ book?.totalUnderOdds},
-                        modifier = Modifier.width(80.dp).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTeam == "Under") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Column{
-                            Text(""+ book?.totalUnder)
-                            Text("" + book?.totalUnderOdds)
+                            line = "${book?.awayTeamRunLine}"
+                            selectedOdds = "${book?.awayTeamRunLineOdds}"
+                        }) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("${book?.awayTeamRunLine}")
+                                Text("${book?.awayTeamRunLineOdds}")
+                            }
                         }
 
+                        Button(onClick = {
+                            selectedTeam = "Over"
+                            betType = "TO"
+                            line = "${book?.totalOver}"
+                            selectedOdds = "${book?.totalOverOdds}"
+                        }) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("${book?.totalOver}")
+                                Text("${book?.totalOverOdds}")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(game.home, fontSize = 16.sp)
+
+                        Button(onClick = {
+                            selectedTeam = game.home
+                            betType = "ML"
+                            line = "ML"
+                            selectedOdds = "${book?.homeTeamMLOdds}"
+                        }) {
+                            Text("${book?.homeTeamMLOdds}")
+                        }
+
+                        Button(onClick = {
+                            selectedTeam = game.home
+                            betType = "RL"
+                            line = "${book?.homeTeamRunLine}"
+                            selectedOdds = "${book?.homeTeamRunLineOdds}"
+                        }) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("${book?.homeTeamRunLine}")
+                                Text("${book?.homeTeamRunLineOdds}")
+                            }
+                        }
+
+                        Button(onClick = {
+                            selectedTeam = "Under"
+                            betType = "TO"
+                            line = "${book?.totalUnder}"
+                            selectedOdds = "${book?.totalUnderOdds}"
+                        }) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("${book?.totalUnder}")
+                                Text("${book?.totalUnderOdds}")
+                            }
+                        }
                     }
                 }
-            }
-
-            Text("Enter Wager Amount:")
-            TextField(
-                value = wagerAmount,
-                onValueChange = { wagerAmount = it },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                placeholder = { Text("e.g., 50") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            //Spacer(modifier = Modifier.height(4.dp))
-
-
-            Button(
-                onClick = {
-
-                    //Not fully functional to add prediction
-                    val prediction = Prediction(
-                        userOwnerId = GlobalVariables.currentUser,
-                        gameId = game.gameId,
-                        predictedWinner = selectedTeam!!,
-                        betType = betType,
-                        line = line,
-                        bettingOdds = selectedOdds,
-                        betAmount = wagerAmount.toInt(),
-                        concluded = false,
-                        result = "Active"
-                    )
-                    viewModel.placeBet(prediction)
-                    betPlaced = true
-                    Toast.makeText(
-                        context,
-                        "Bet placed on $selectedTeam for $$wagerAmount",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navController.popBackStack()
-                },
-                enabled = selectedTeam.isNotEmpty() && wagerAmount.isNotEmpty(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (betPlaced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("Place Bet on $selectedTeam")
             }
         } else {
             Text("Loading betting odds...")
         }
 
-//        Text("Select Team to Win:")
-//        Column {
-//            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-//                Button(
-//                    onClick = { selectedTeam = game.away },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = if (selectedTeam == game.away) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-//                    )
-//                ) {
-//                    Text(game.away)
-//                }
-//
-//                Button(
-//                    onClick = { selectedTeam = game.home },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = if (selectedTeam == game.home) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-//                    )
-//                ) {
-//                    Text(game.home)
-//                }
-//
-//                Button(
-//                    onClick = { selectedTeam = "" },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = if (selectedTeam == game.home) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-//                    )
-//                ) {
-//                    Text("Over "+ book?.totalOver)
-//                }
-//            }
-//        }
-//
-//        Text("Enter Wager Amount:")
-//        TextField(
-//            value = wagerAmount,
-//            onValueChange = { wagerAmount = it },
-//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-//            singleLine = true,
-//            placeholder = { Text("e.g., 50") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(24.dp))
-//
-//
-//        Button(
-//            onClick = {
-//
-//                //Not fully functional to add prediction
-//                val prediction = Prediction(
-//                    userOwnerId = GlobalVariables.currentUser,
-//                    gameId = game.gameId,
-//                    predictedWinner = selectedTeam!!,
-//                    betType = "ML",
-//                    line = "ML",
-//                    bettingOdds = "-150",
-//                    betAmount = wagerAmount.toInt()
-//                )
-//                viewModel.placeBet(prediction)
-//                betPlaced = true
-//                Toast.makeText(
-//                    context,
-//                    "Bet placed on $selectedTeam for $$wagerAmount",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//                navController.popBackStack()
-//            },
-//            enabled = selectedTeam.isNotEmpty() && wagerAmount.isNotEmpty(),
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = if (betPlaced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
-//            ),
-//            modifier = Modifier.align(Alignment.CenterHorizontally)
-//        ) {
-//            Text("Place Bet on $selectedTeam")
-//        }
+        Text("Enter Wager Amount:")
+        TextField(
+            value = wagerAmount,
+            onValueChange = { wagerAmount = it },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            placeholder = { Text("e.g., 50") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = {
+                val cleanWagerAmount = wagerAmount.replace(",", "").trim()
+                val prediction = Prediction(
+                    userOwnerId = GlobalVariables.currentUser,
+                    gameId = game.gameId,
+                    predictedWinner = selectedTeam,
+                    betType = betType,
+                    line = line,
+                    bettingOdds = selectedOdds,
+                    betAmount = cleanWagerAmount.toInt(),
+                    concluded = false,
+                    result = "Active"
+                )
+                viewModel.placeBet(prediction)
+            },
+            enabled = selectedTeam.isNotEmpty() && wagerAmount.isNotEmpty(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (betPlaced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Place Bet on $selectedTeam")
+        }
     }
 
     @Composable

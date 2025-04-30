@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -91,6 +92,10 @@ class MainActivity : ComponentActivity() {
         val scope = rememberCoroutineScope()
         val navController = rememberNavController()
         val snackbarHostState = remember { SnackbarHostState() }
+
+        LaunchedEffect(Unit) {
+            viewModel.loadUserCurrency()
+        }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -156,6 +161,7 @@ class MainActivity : ComponentActivity() {
 
                 }
         ){
+            val currency by viewModel.currency.collectAsState()
             Scaffold(
                 topBar = {
                     TopAppBar(
@@ -167,13 +173,19 @@ class MainActivity : ComponentActivity() {
                                 scope.launch {
                                     drawerState.open()
                                 }
-
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Menu,
                                     contentDescription = "Menu"
                                 )
                             }
+                        },
+                        actions = {
+                            Text(
+                                text = "💰 $currency",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
                         }
                     )
 
