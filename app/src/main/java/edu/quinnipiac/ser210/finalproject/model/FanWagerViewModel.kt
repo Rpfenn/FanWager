@@ -20,7 +20,6 @@ import edu.quinnipiac.ser210.finalproject.model.SportsBookOdds
 import edu.quinnipiac.ser210.finalproject.network.RetrofitInstance.api
 import kotlinx.coroutines.launch
 import android.content.Context
-import androidx.lifecycle.viewModelScope
 import edu.quinnipiac.ser210.finalproject.api.ApiClient
 import edu.quinnipiac.ser210.finalproject.data.FanWagerRepository
 import edu.quinnipiac.ser210.finalproject.data.GlobalVariables
@@ -29,7 +28,6 @@ import edu.quinnipiac.ser210.finalproject.data.User
 import edu.quinnipiac.ser210.finalproject.ui.theme.ColorSchemeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel() {
@@ -56,9 +54,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     val betPlacedSuccessfully: StateFlow<Boolean> = _betPlacedSuccessfully
 
     private val client = OkHttpClient()
-
     private val api = ApiClient.retrofitService
-
     private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
     private val baseUrl = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
     private val endpoint = "/getMLBGamesForDate"
@@ -88,13 +84,10 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
 
                     val responseBody = it.body?.string()
                     if (responseBody != null) {
-                        Log.d("TankAPI", "RAW JSON:\n$responseBody")
-
                         try {
                             val parsed = Gson().fromJson(responseBody, MLBGameResponse::class.java)
                             val nowEpoch = System.currentTimeMillis() / 1000
                             val gameList = parsed.body.map { game ->
-
                                 val inferredStatus = when {
                                     game.gameStatus == "In Progress" -> "In Progress"
                                     game.gameStatus == "Completed" -> "Completed"
@@ -117,12 +110,9 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                             viewModelScope.launch(Dispatchers.IO) {
                                 repository.insertGames(gameList)
                             }
-                            Log.d("TankAPI", "Loaded ${gameList.size} games.")
                         } catch (ex: Exception) {
                             Log.e("TankAPI", "Exception while parsing JSON: ${ex.message}")
                         }
-                    } else {
-                        Log.e("TankAPI", "Empty response body")
                     }
                 }
             }
@@ -142,6 +132,8 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
 
                 repository.insertPrediction(prediction)
                 _betPlacedSuccessfully.value = true
+
+                loadLeaderboardFromDatabase() // ✅ update leaderboard
             } else {
                 _errorMessage.value = "You do not have enough currency to place this bet."
             }
@@ -155,31 +147,16 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     fun fetchOdds(gameId: String, gameDate: String) {
         viewModelScope.launch {
             try {
-                Log.d("TankAPI", "📡 Fetching betting odds for $gameDate ($gameId)")
-                Log.d(
-                    "TankAPI",
-                    "Calling endpoint with gameDate=$gameDate, key=$apiKey, tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
-                )
-                val response = api.getBettingOdds(
-                    gameDate
-                )
+                val response = api.getBettingOdds(gameDate)
                 if (response.isSuccessful) {
                     val allOdds = response.body()?.body ?: emptyList()
                     val matchingGame = allOdds.find { it.gameID == gameId }
                     if (matchingGame != null) {
                         _odds.value = matchingGame
-                        Log.d(
-                            "TankAPI",
-                            "✅ Found odds for $gameId with ${matchingGame.sportsBooks.size} books"
-                        )
-                    } else {
-                        Log.w("TankAPI", "⚠️ No odds found for $gameId")
                     }
-                } else {
-                    Log.e("TankAPI", "❌ API Error (${response.code()}): ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("TankAPI", "❌ Exception while fetching odds", e)
+                Log.e("TankAPI", "Exception while fetching odds", e)
             }
         }
     }
@@ -188,35 +165,29 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         viewModelScope.launch {
             try {
                 val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
-                val response = api.getGames(
-                    gameDate = today
-                )
+                val response = api.getGames(gameDate = today)
 
                 if (response.isSuccessful) {
-                    val body = response.body()?.body  // 🚨 Note: accessing .body inside MLBGameResponse
+                    val body = response.body()?.body
                     if (body != null) {
                         val nowEpoch = System.currentTimeMillis() / 1000
                         val gameList = body.map { (gameId, game) ->
-
-                            val inferredStatus = when {
+                            val status = when {
                                 game.gameStatus == "In Progress" -> "In Progress"
                                 game.gameStatus == "Completed" -> "Completed"
                                 game.gameTime_epoch.toDoubleOrNull()?.let { it <= nowEpoch } == true -> "In Progress"
                                 else -> "Scheduled"
                             }
 
-                            val awayScore = game.lineScore?.away?.R
-                            val homeScore = game.lineScore?.home?.R
-
                             GameDetails(
                                 gameId = gameId,
                                 away = game.away,
                                 home = game.home,
                                 gameTime = game.gameTime,
-                                gameStatus = inferredStatus,
+                                gameStatus = status,
                                 gameDate = today,
-                                awayScore = awayScore,
-                                homeScore = homeScore
+                                awayScore = game.lineScore?.away?.R,
+                                homeScore = game.lineScore?.home?.R
                             )
                         }
 
@@ -227,46 +198,35 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                         viewModelScope.launch(Dispatchers.IO) {
                             repository.insertGames(gameList)
                         }
-
-                        Log.d("TankAPI", "✅ Loaded ${gameList.size} daily live games with scores.")
-                    } else {
-                        Log.e("TankAPI", "❌ Empty body in Daily Scoreboard Live response")
                     }
-                } else {
-                    Log.e("TankAPI", "❌ API Error (${response.code()}): ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("TankAPI", "❌ Exception while fetching daily scoreboard live", e)
+                Log.e("TankAPI", "Exception in fetchDailyScoreboardLive", e)
             }
         }
     }
-    fun loadFakeLeaderboard() {
-        val fakeLeaderboard = listOf(
-            LeaderboardEntry("Tannon", 5000),
-            LeaderboardEntry("Alex", 4200),
-            LeaderboardEntry("Jamie", 3900),
-            LeaderboardEntry("Riley", 3400),
-            LeaderboardEntry("Sam", 2800)
-        ).sortedByDescending { it.score }
 
-        _leaderboard.value = fakeLeaderboard
-    }
-
-    fun setTheme(option: ColorSchemeType) {
-        _theme.value = option
-    }
-
-    fun createDefaultUserIfNeeded() {
+    fun loadLeaderboardFromDatabase() {
         viewModelScope.launch(Dispatchers.IO) {
-            val existingUser = repository.getAnyUser()
-            if (existingUser == null) {
-                repository.insertUser(
-                    User(
-                        username = "DefualtUser", // whatever you want
-                        currency = 1000 // starting currency
-                    )
-                )
+            val users = repository.getAllUsers()
+            val realEntries = users.map {
+                LeaderboardEntry(username = it.username, score = it.currency)
             }
+
+            val fakeUsers = listOf(
+                LeaderboardEntry("Alex", (0..2000).random()),
+                LeaderboardEntry("Jordan", (0..2000).random()),
+                LeaderboardEntry("Taylor", (0..2000).random()),
+                LeaderboardEntry("Casey", (0..2000).random()),
+                LeaderboardEntry("Drew", (0..2000).random()),
+                LeaderboardEntry("Jack", (0..2000).random()),
+                LeaderboardEntry("Zach", (0..2000).random()),
+                LeaderboardEntry("Aidan", (0..2000).random()),
+                LeaderboardEntry("Conner", (0..2000).random())
+            )
+
+            val allEntries = (realEntries + fakeUsers).sortedByDescending { it.score }
+            _leaderboard.value = allEntries
         }
     }
 
@@ -289,39 +249,23 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
 
                     val correct = when (prediction.betType) {
                         "ML" -> prediction.predictedWinner == winner
-
                         "RL" -> {
                             val predictedScore = if (prediction.predictedWinner == game.home) game.homeScore!!.toDouble() else game.awayScore!!.toDouble()
                             val opponentScore = if (prediction.predictedWinner == game.home) game.awayScore!!.toDouble() else game.homeScore!!.toDouble()
                             val spread = prediction.line.toDoubleOrNull() ?: 0.0
-
-                            if (spread > 0) {
-                                predictedScore + spread > opponentScore
-                            } else {
-                                predictedScore > opponentScore + -spread
-                            }
+                            predictedScore > opponentScore + -spread
                         }
-
                         "TO" -> {
                             val total = game.homeScore!!.toDouble() + game.awayScore!!.toDouble()
                             val target = prediction.line.toDoubleOrNull() ?: 0.0
-
-                            if (prediction.predictedWinner == "Over") {
-                                total > target
-                            } else {
-                                total < target
-                            }
+                            if (prediction.predictedWinner == "Over") total > target else total < target
                         }
-
                         else -> false
                     }
 
                     val winnings = if (correct) {
-                        val profit = calculateWinnings(prediction.betAmount, prediction.bettingOdds)
-                        profit + prediction.betAmount
-                    } else {
-                        0
-                    }
+                        calculateWinnings(prediction.betAmount, prediction.bettingOdds) + prediction.betAmount
+                    } else 0
 
                     val newCurrency = user.currency + winnings
                     val updatedUser = user.copy(currency = newCurrency)
@@ -335,30 +279,22 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                         }
                     }
 
-                    val resultText = if (correct) "win" else "loss"
-                    repository.markPredictionAsResult(prediction.predictionId, resultText)
-
-                    Log.d("Validation", "User ${user.username} $resultText prediction on ${game.gameId}. Winnings: $winnings")
+                    repository.markPredictionAsResult(prediction.predictionId, if (correct) "win" else "loss")
                 }
             }
+
+            loadLeaderboardFromDatabase() // ✅ refresh leaderboard after scoring
         }
     }
 
     fun calculateWinnings(betAmount: Int, odds: String): Int {
         return try {
-            val cleanOdds = odds.replace(",", "").trim()
-            val value = cleanOdds.toInt()
-
-            if (value > 0) {
-                // Positive odds (e.g., +150)
-                (betAmount * value / 100.0).toInt()
-            } else {
-                // Negative odds (e.g., -110)
-                (betAmount * 100 / -value.toDouble()).toInt()
-            }
+            val value = odds.replace(",", "").trim().toInt()
+            if (value > 0) (betAmount * value / 100.0).toInt()
+            else (betAmount * 100 / -value.toDouble()).toInt()
         } catch (e: Exception) {
             Log.e("BettingCalc", "Invalid odds format: $odds", e)
-            0 // fallback if odds can't be parsed
+            0
         }
     }
 
@@ -375,4 +311,26 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
         _errorMessage.value = null
     }
 
+    fun setTheme(option: ColorSchemeType) {
+        _theme.value = option
+    }
+
+    fun createDefaultUserIfNeeded() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val existingUser = repository.getAnyUser()
+            if (existingUser == null) {
+                repository.insertUser(User(username = "You", currency = 1000))
+            }
+        }
+    }
+
+    fun renameDefaultUserToYou() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = repository.getAnyUser()
+            if (user != null && user.username == "DefaultUser") {
+                val updated = user.copy(username = "You")
+                repository.updateUser(updated)
+            }
+        }
+    }
 }

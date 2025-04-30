@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -14,31 +14,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-data class LeaderboardEntry(val name: String, val currency: Int)
+import edu.quinnipiac.ser210.finalproject.FanWagerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderBoardScreen() {
-    val fakeLeaderboard = listOf(
-        LeaderboardEntry("You", 4200),
-        LeaderboardEntry("Alex", 3800),
-        LeaderboardEntry("Jordan", 3500),
-        LeaderboardEntry("Taylor", 3000),
-        LeaderboardEntry("Casey", 2700),
-        LeaderboardEntry("Drew", 2500),
-        LeaderboardEntry("Jack", 1300),
-        LeaderboardEntry("Zach", 1200),
-        LeaderboardEntry("Aidan", 1000),
-        LeaderboardEntry("Conner", 800)
-    )
+fun LeaderBoardScreen(viewModel: FanWagerViewModel) {
+    val leaderboard by viewModel.leaderboard.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadLeaderboardFromDatabase()
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "🏆 Leaderboard",
+                        text = "\uD83C\uDFC6 Leaderboard",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Cursive
@@ -67,7 +59,7 @@ fun LeaderBoardScreen() {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                itemsIndexed(fakeLeaderboard) { index, player ->
+                itemsIndexed(leaderboard) { index, player ->
                     val bonus = when (index) {
                         0 -> 100
                         1 -> 75
@@ -75,7 +67,7 @@ fun LeaderBoardScreen() {
                         3 -> 25
                         else -> 0
                     }
-                    LeaderboardRow(rank = index + 1, name = player.name, score = player.currency, bonus = bonus)
+                    LeaderboardRow(rank = index + 1, name = player.username, score = player.score, bonus = bonus)
                 }
             }
         }
