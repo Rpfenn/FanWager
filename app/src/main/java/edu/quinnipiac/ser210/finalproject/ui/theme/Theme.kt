@@ -35,7 +35,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 enum class ColorSchemeType {
-    LIGHT, DARK, BLUE
+    LIGHT, DARK
 }
 
 @Composable
@@ -54,13 +54,6 @@ fun FinalProjectTheme(
                 dynamicLightColorScheme(context)
         }
         colorSchemeType == ColorSchemeType.DARK -> DarkColorScheme
-        colorSchemeType == ColorSchemeType.BLUE -> lightColorScheme(
-            primary = Color(0xFF0288D1),
-            secondary = Color(0xFF03A9F4),
-            tertiary = Color(0xFF81D4FA),
-            background = Color(0xFFE1F5FE),
-            surface = Color(0xFFE1F5FE)
-        )
         else -> LightColorScheme
     }
 

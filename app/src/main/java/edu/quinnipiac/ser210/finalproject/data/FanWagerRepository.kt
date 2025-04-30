@@ -41,6 +41,14 @@ class FanWagerRepository(private val db: AppDatabase) {
         db.userDao().updateUser(user)
     }
 
+    suspend fun getPredictionsForUser(userId: Int): List<Prediction> {
+        return db.predictionDao().getPredictionsForUser(userId)
+    }
+
+    suspend fun deleteCompletedPredictions() {
+        db.predictionDao().deleteCompletedPredictions()
+    }
+
     // ✅ this is the missing method
     suspend fun getAllUsers(): List<User> {
         return db.userDao().getAllUsers()

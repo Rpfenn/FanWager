@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -290,6 +291,14 @@ fun PlaceBetForm(
             modifier = Modifier.fillMaxWidth()
         )
 
+        if (game.gameStatus == "Completed") {
+            Text(
+                text = "❌ You cannot bet on completed games.",
+                color = Color.Red,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Button(
             onClick = {
                 val cleanWagerAmount = wagerAmount.replace(",", "").trim()
@@ -306,7 +315,9 @@ fun PlaceBetForm(
                 )
                 viewModel.placeBet(prediction)
             },
-            enabled = selectedTeam.isNotEmpty() && wagerAmount.isNotEmpty(),
+            enabled = selectedTeam.isNotEmpty() &&
+                    wagerAmount.isNotEmpty() &&
+                    game.gameStatus != "Completed",
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (betPlaced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
             ),

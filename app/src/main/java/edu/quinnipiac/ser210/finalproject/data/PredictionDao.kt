@@ -18,6 +18,7 @@ interface PredictionDao {
     @Query("UPDATE predictions SET concluded = 1, result = :result WHERE predictionId = :predictionId")
     suspend fun markPredictionResult(predictionId: Int, result: String)
 
-
+    @Query("DELETE FROM predictions WHERE result IN ('win', 'loss')")
+    suspend fun deleteCompletedPredictions()
 
 }

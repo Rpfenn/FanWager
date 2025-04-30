@@ -48,7 +48,7 @@ fun FanWagerNavigation(
         }
 
         composable(Screens.HistoryScreen.route) {
-            HistoryScreen()
+            HistoryScreen(viewModel = viewModel)
         }
 
         // ✅ Correctly passing the viewModel

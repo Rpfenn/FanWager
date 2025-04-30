@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -15,7 +16,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -72,21 +76,19 @@ class MainActivity : ComponentActivity() {
                     Column {
                         Box(
                             modifier = Modifier
-                                .height(100.dp)
+                                .height(150.dp)
                                 .fillMaxWidth(0.8f)
-                                .background(color = Purple40)
+                                .background(MaterialTheme.colorScheme.background),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = "FanWager",
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color.White
-                                    )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo),
+                                    contentDescription = "FanWager Logo",
+                                    modifier = Modifier
+                                        .size(512.dp),
+                                    contentScale = ContentScale.Fit
                                 )
                             }
                         }
