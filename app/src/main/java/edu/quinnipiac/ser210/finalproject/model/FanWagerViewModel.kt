@@ -53,6 +53,9 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     private val _betPlacedSuccessfully = MutableStateFlow(false)
     val betPlacedSuccessfully: StateFlow<Boolean> = _betPlacedSuccessfully
 
+    private val _userPredictions = MutableStateFlow<List<Prediction>>(emptyList())
+    val userPredictions: StateFlow<List<Prediction>> = _userPredictions
+
     private val client = OkHttpClient()
     private val api = ApiClient.retrofitService
     private val apiKey = "a4a83495ddmshf7e0965c9e681e9p14c029jsn3aaf07be0b5c"
@@ -122,21 +125,23 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     fun placeBet(prediction: Prediction) {
         viewModelScope.launch(Dispatchers.IO) {
             val user = repository.getUserById(prediction.userOwnerId)
-            if (user != null && user.currency >= prediction.betAmount) {
-                val updatedUser = user.copy(currency = user.currency - prediction.betAmount)
+                val updatedUser = user?.copy(currency = user.currency - prediction.betAmount)
+            if (updatedUser != null) {
                 repository.updateUser(updatedUser)
+            }
 
+            if (user != null) {
                 if (user.userId == GlobalVariables.currentUser) {
-                    _currency.value = updatedUser.currency
+                    if (updatedUser != null) {
+                        _currency.value = updatedUser.currency
+                    }
                 }
+            }
 
                 repository.insertPrediction(prediction)
                 _betPlacedSuccessfully.value = true
 
                 loadLeaderboardFromDatabase() // ✅ update leaderboard
-            } else {
-                _errorMessage.value = "You do not have enough currency to place this bet."
-            }
         }
     }
 
@@ -331,6 +336,20 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                 val updated = user.copy(username = "You")
                 repository.updateUser(updated)
             }
+        }
+    }
+
+    fun loadUserPredictions() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val predictions = repository.getPredictionsForUser(GlobalVariables.currentUser)
+            _userPredictions.value = predictions
+        }
+    }
+
+    fun clearCompletedPredictions() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteCompletedPredictions()
+            loadUserPredictions() // reload list after clearing
         }
     }
 }
