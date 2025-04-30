@@ -36,29 +36,30 @@ fun FanWagerNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.SPLASH, // 🚀 Now SplashScreen is the start
+        startDestination = Routes.SPLASH,
         modifier = Modifier.fillMaxSize()
     ) {
-        // Splash Screen first
         composable(Routes.SPLASH) {
             SplashScreen(navController)
         }
 
-        // Main screens
         composable(Screens.HomeScreen.route) {
             HomeScreen(navController)
         }
+
         composable(Screens.HistoryScreen.route) {
             HistoryScreen()
         }
+
+        // ✅ Correctly passing the viewModel
         composable(Screens.LeaderBoardScreen.route) {
-            LeaderBoardScreen()
+            LeaderBoardScreen(viewModel = viewModel)
         }
+
         composable(Screens.SettingsScreen.route) {
             SettingsScreen(viewModel = viewModel)
         }
 
-        // Special place bet screen with parameter
         composable("place_bet/{gameId}") { backStackEntry ->
             val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
             PlaceBetScreen(navController = navController, gameId = gameId, viewModel = viewModel)

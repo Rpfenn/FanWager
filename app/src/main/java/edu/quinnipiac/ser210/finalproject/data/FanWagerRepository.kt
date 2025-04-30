@@ -41,4 +41,9 @@ class FanWagerRepository(private val db: AppDatabase) {
         db.userDao().updateUser(user)
     }
 
+    // ✅ this is the missing method
+    suspend fun getAllUsers(): List<User> {
+        return db.userDao().getAllUsers()
+    }
+
 }
