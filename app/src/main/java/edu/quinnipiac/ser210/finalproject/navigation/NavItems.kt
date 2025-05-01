@@ -11,16 +11,15 @@ import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
-// ✨ Now includes SplashScreen in Screens enum
 enum class Screens(val route: String) {
-    SplashScreen("splash"), // <-- added this
+    SplashScreen("splash"),
     HomeScreen("home"),
     HistoryScreen("history"),
     LeaderBoardScreen("leaderboard"),
     SettingsScreen("settings")
 }
 
-// 👇 This stays the same! SplashScreen is NOT part of the bottom nav bar
+
 data class NavItems(
     val title: String,
     val unselectedIcon: ImageVector,

@@ -26,7 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "fanwager_db"
                 )
-                    .fallbackToDestructiveMigration() // Optional: clears DB if migration is missing
+                    .fallbackToDestructiveMigration()
                     .build().also { INSTANCE = it }
             }
         }
