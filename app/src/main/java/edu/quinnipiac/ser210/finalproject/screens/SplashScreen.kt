@@ -88,7 +88,7 @@ fun SplashScreen(navController: NavController) {
             }
         }
 
-        // Footer credits
+
         Box(
             modifier = Modifier
                 .fillMaxSize()

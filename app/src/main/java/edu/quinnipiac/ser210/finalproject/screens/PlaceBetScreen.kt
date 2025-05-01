@@ -293,7 +293,7 @@ fun PlaceBetForm(
 
         if (game.gameStatus == "Completed") {
             Text(
-                text = "❌ You cannot bet on completed games.",
+                text = " You cannot bet on completed games.",
                 color = Color.Red,
                 style = MaterialTheme.typography.bodyMedium
             )

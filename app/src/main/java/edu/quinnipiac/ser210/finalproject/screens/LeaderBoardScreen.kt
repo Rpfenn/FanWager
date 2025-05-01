@@ -77,9 +77,9 @@ fun LeaderBoardScreen(viewModel: FanWagerViewModel) {
 @Composable
 fun LeaderboardRow(rank: Int, name: String, score: Int, bonus: Int) {
     val cardColor = when (rank) {
-        1 -> Color(0xFFFFF176) // Gold
-        2 -> Color(0xFFB0BEC5) // Silver
-        3 -> Color(0xFFFFAB91) // Bronze
+        1 -> Color(0xFFFFF176) //Gold
+        2 -> Color(0xFFB0BEC5) //Silver
+        3 -> Color(0xFFFFAB91) //Bronze
         else -> MaterialTheme.colorScheme.surface
     }
 

@@ -60,7 +60,7 @@ fun SettingsScreen(viewModel: FanWagerViewModel) {
                 }
             }
 
-            // Help & Info Section
+            //Help / Info Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -94,7 +94,7 @@ fun SettingsScreen(viewModel: FanWagerViewModel) {
             }
         }
 
-        // Info Dialog
+        //Info Dialog
         if (showInfoDialog) {
             AlertDialog(
                 onDismissRequest = { showInfoDialog = false },

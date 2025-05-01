@@ -14,7 +14,6 @@ import retrofit2.http.Query
 
 interface ApiInterface {
 
-    // Updated: Fetch live MLB game scores with headers passed per call
     @GET("/getMLBScoresOnly")
     suspend fun getGames(
         @Query("gameDate") gameDate: String,

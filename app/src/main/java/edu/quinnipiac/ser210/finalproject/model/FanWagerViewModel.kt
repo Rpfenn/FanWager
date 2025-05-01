@@ -288,7 +288,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
                 }
             }
 
-            loadLeaderboardFromDatabase() // ✅ refresh leaderboard after scoring
+            loadLeaderboardFromDatabase()
         }
     }
 
@@ -349,7 +349,7 @@ class FanWagerViewModel(private val repository: FanWagerRepository) : ViewModel(
     fun clearCompletedPredictions() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteCompletedPredictions()
-            loadUserPredictions() // reload list after clearing
+            loadUserPredictions()
         }
     }
 }

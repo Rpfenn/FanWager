@@ -45,7 +45,7 @@ fun HistoryScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(WindowInsets.statusBars.asPaddingValues())
-            .padding(16.dp) // optional internal padding
+            .padding(16.dp)
     ) {
         Text("📜 Bet History", style = MaterialTheme.typography.headlineMedium)
 

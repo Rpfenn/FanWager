@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
             val viewModel: FanWagerViewModel = viewModel(factory = FanWagerViewModelFactory(db))
             val theme by viewModel.theme.collectAsState()
 
-            // ✅ Rename \"DefaultUser\" to \"You\" if needed
             LaunchedEffect(Unit) {
                 viewModel.renameDefaultUserToYou()
             }
